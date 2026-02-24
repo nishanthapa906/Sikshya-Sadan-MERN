@@ -1,23 +1,17 @@
-import express from "express" ;
-import connectDb from "../src/db/connect.js";
-import studentRoutes from './routes/studentRoutes.js';
+import express from 'express'
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const studentRoutes = require('./routes/studentRoutes');
 
-const app = express();
-const PORT = 9000;
+// Get app instance from index.js
+import('./index.js').then(module => {
+  const app = module.app;
 
-//connect database
-connectDb();
+  //Mount routes
+  app.use('/api/student',studentRoutes);
 
-//application setting
-app.use(express.json());
+//welcom routes
 
-app.use('/image/', express.static('./public/Images'))
-
-//base routes
-
-app.use('/api/student', studentRoutes);
-
-//welcome routes
 app.get('/', (req,res) =>{
     res.json({
         success:true,
@@ -27,6 +21,7 @@ app.get('/', (req,res) =>{
         }
     });
 });
+
 
 // 404 handler
 app.use((req, res) => {
@@ -45,9 +40,3 @@ app.use((err, req, res, next) => {
         error: process.env.NODE_ENV === 'development' ? err : {}
     });
 });
-
-app.listen(PORT , ()=>{
-  console.log(`App is listening at ${PORT}.!`)
-});
-
-
