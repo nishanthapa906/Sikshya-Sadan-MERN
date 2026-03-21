@@ -4,7 +4,7 @@ import cookieParser from "cookie-parser";
 import connectDb from "./src/db/connect.js";
 
 // Routers
-// import authRouter from "./routes/authRoutes.js";
+import authRouter from "./src/routes/authRoutes.js";
 // import courseRouter from "./routes/courseRoutes.js";
 // import studentRouter from "./routes/studentRoutes.js";
 // import instructorRouter from "./routes/instructorRoutes.js";
@@ -34,7 +34,7 @@ app.use(cookieParser());
 app.use("/uploads", express.static('./public/Images'));
 
 // Base Routes
-// app.use("/api/auth", authRouter);
+app.use("/api/auth", authRouter);
 // app.use("/api/courses", courseRouter);
 // app.use("/api/student", studentRouter);
 // app.use("/api/instructor", instructorRouter);
