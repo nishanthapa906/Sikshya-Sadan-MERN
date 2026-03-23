@@ -28,7 +28,7 @@ const courseSchema = new mongoose.Schema({
    }, 
 
    fee: {
-    type: Nubmer, 
+    type: Number, 
     required: true,
    }, 
 
@@ -43,7 +43,7 @@ const courseSchema = new mongoose.Schema({
     instructor:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User', 
-        required: True, 
+        required: true, 
     }, 
     syllabus:[{
         week: Number, 

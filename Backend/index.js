@@ -5,7 +5,7 @@ import connectDb from "./src/db/connect.js";
 
 // Routers
 import authRouter from "./src/routes/authRoutes.js";
-// import courseRouter from "./routes/courseRoutes.js";
+ import courseRouter from "./src/routes/courseRoutes.js";
 // import studentRouter from "./routes/studentRoutes.js";
 // import instructorRouter from "./routes/instructorRoutes.js";
 import adminRouter from "./src/routes/adminRoutes.js";
@@ -35,7 +35,7 @@ app.use("/uploads", express.static('./public/Images'));
 
 // Base Routes
 app.use("/api/auth", authRouter);
-// app.use("/api/courses", courseRouter);
+ app.use("/api/courses", courseRouter);
 // app.use("/api/student", studentRouter);
 // app.use("/api/instructor", instructorRouter);
 app.use("/api/admin", adminRouter);

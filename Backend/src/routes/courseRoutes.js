@@ -1,6 +1,7 @@
 import express from 'express';
-import { addReview, createCourse, deleteCourse, getAllCourses, getCourseById, getInstructorCourses, updateCourse } from '../controller/courseController';
+import { addReview, createCourse, deleteCourse, getAllCourses, getCourseById, getInstructorCourses, updateCourse } from '../controller/courseController.js';
 import { protect } from '../middleware/auth.js';
+import upload from '../middleware/upload.js';
 
 const router = express.Router();
 
@@ -13,8 +14,8 @@ router.post('/:id/review', protect, addReview);
 router.get('/instructor/my-courses', protect, getInstructorCourses);
 
 const courseUpload = upload.fields([
-    {name: 'thumbnail', maxCount: 1}, 
-    {name: 'syllabusFile', maxCount: 1}
+    { name: 'thumbnail', maxCount: 1 },
+    { name: 'syllabusFile', maxCount: 1 }
 ]);
 
 router.post('/' , protect, courseUpload, createCourse);
