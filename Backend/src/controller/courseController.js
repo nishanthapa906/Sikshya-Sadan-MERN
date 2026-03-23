@@ -7,11 +7,11 @@ import Course from "../models/courseModel.js";
 export const getAllCourses = async (req, res) =>{
     try{
         const {search, category , skillLevel,sort, limit } = req.query ;
-        let query  = {isActive: True};
+        let query  = {isActive: true};
 
         if (category) query.category = category;
         if (skillLevel) query.skillLevel = skillLevel;
-        if ( search) query.title = {$regex: search, $option: 'i'};
+        if ( search) query.title = {$regex: search, $options: 'i'};
 
         let coursesQuery = Course.find(query).populate('instructor', 'name avatar');
        // sorting 
@@ -180,7 +180,7 @@ export const addReview = async (req, res) =>{
 
         //mannual Calculation 
         const sum = course.reviews.reduce((acc, review) => acc + review.rating, 0);
-        course.rating = (sum / course.review.length).toFixed(1);
+        course.rating = (sum / course.reviews.length).toFixed(1);
         await course.save();
 
         res.status(200).json({
@@ -206,7 +206,7 @@ export const getInstructorCourses = async (req, res) =>{
         res.status(200).json({
             status: 200, 
             success:true, 
-             success
+             courses
         });
     }  catch (error) {
         res.status(500).json({
