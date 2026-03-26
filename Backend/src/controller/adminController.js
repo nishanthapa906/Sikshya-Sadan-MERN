@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import User from '../models/userModel.js';
-// import Course from '../models/courseModel.js';
-// import Enrollment from '../models/enrollmentModel.js';
+import Course from '../models/courseModel.js';
+import Enrollment from '../models/enrollmentModel.js';
 
 // Stats
 export const getStats = async (req, res) => {
@@ -9,11 +9,11 @@ export const getStats = async (req, res) => {
         const stats = {
             totalStudents: await User.countDocuments({ role: 'student' }),
             totalInstructors: await User.countDocuments({ role: 'instructor' }),
-            // totalCourses: await Course.countDocuments(),
-            // totalEnrollments: await Enrollment.countDocuments(),
-            // totalRevenue: await Enrollment.aggregate([
-            //     { $group: { _id: null, total: { $sum: '$paidAmount' } } }
-            // ]).then(res => res[0]?.total || 0)
+            totalCourses: await Course.countDocuments(),
+            totalEnrollments: await Enrollment.countDocuments(),
+            totalRevenue: await Enrollment.aggregate([
+                { $group: { _id: null, total: { $sum: '$paidAmount' } } }
+            ]).then(res => res[0]?.total || 0)
         };
         res.status(200).json({ status: 200, success: true, data: stats });
     } catch (error) {
@@ -44,16 +44,16 @@ export const updateUserStatus = async (req, res) => {
     }
 };
 
-// // Financial Reports
-// export const getFinancialReports = async (req, res) => {
-//     try {
-//         const enrollments = await Enrollment.find().populate('student', 'name').populate('course', 'title');
-//         const totalRevenue = enrollments.reduce((acc, curr) => acc + (curr.paidAmount || 0), 0);
-//         res.status(200).json({ status: 200, success: true, data: { enrollments, totalRevenue } });
-//     } catch (error) {
-//         res.status(500).json({ status: 500, success: false, message: error.message });
-//     }
-// };
+// Financial Reports
+export const getFinancialReports = async (req, res) => {
+    try {
+        const enrollments = await Enrollment.find().populate('student', 'name').populate('course', 'title');
+        const totalRevenue = enrollments.reduce((acc, curr) => acc + (curr.paidAmount || 0), 0);
+        res.status(200).json({ status: 200, success: true, data: { enrollments, totalRevenue } });
+    } catch (error) {
+        res.status(500).json({ status: 500, success: false, message: error.message });
+    }
+};
 
 // Create User
 export const createUser = async (req, res) => {
@@ -142,12 +142,12 @@ export const deleteUser = async (req, res) => {
     }
 };
 
-// // Payment Status
-// export const updateEnrollmentPaymentStatus = async (req, res) => {
-//     try {
-//         await Enrollment.findByIdAndUpdate(req.params.id, { paymentStatus: req.body.paymentStatus });
-//         res.status(200).json({ status: 200, success: true, message: 'Payment Status Updated Successfully!' });
-//     } catch (error) {
-//         res.status(500).json({ status: 500, success: false, message: error.message });
-//     }
-// };
+// Payment Status
+export const updateEnrollmentPaymentStatus = async (req, res) => {
+    try {
+        await Enrollment.findByIdAndUpdate(req.params.id, { paymentStatus: req.body.paymentStatus });
+        res.status(200).json({ status: 200, success: true, message: 'Payment Status Updated Successfully!' });
+    } catch (error) {
+        res.status(500).json({ status: 500, success: false, message: error.message });
+    }
+};
