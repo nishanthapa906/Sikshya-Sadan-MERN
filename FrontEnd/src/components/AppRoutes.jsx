@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import Home from '../pages/Home';
  import Login from '../pages/Login';
 import Register from '../pages/Register';
-// import Courses from '../pages/Courses';
+
 // import CourseDetail from '../pages/CourseDetail';
  import Contact from '../pages/Contact';
 // import Jobs from '../pages/Jobs';
@@ -18,9 +18,9 @@ import Register from '../pages/Register';
 import About from '../pages/About';
 
 // Student Portal Pages
- import StudentDashboard from '../pages/students/StudentDashboard';
+ 
  import StudentCourseView from '../pages/students/StudentCourseView';
- import MyCourses from '../pages/courses/MyCourses';
+ import MyCourses from '../pages/students/MyCourses';
 // import Assignments from '../pages/Assignments';
 // import Certificates from '../pages/Certificates';
 // import StudentFinance from '../pages/StudentFinance';
@@ -38,6 +38,13 @@ import About from '../pages/About';
 // Admin Portal Pages
  import AdminDashboard from '../pages/Admin/AdminDashboard';
 import Users from '../pages/Admin/Users';
+import StudentDashboard from '../pages/students/StudentDashboard';
+import CourseDetail from '../pages/courses/CourseDetail';
+import Courses from '../pages/courses/Courses';
+import ManageCourses from '../pages/Instrucutor/ManageCourses';
+import InstructorDashboard from '../pages/Instrucutor/InstructorDashboard';
+import InstructorAttendance from '../pages/Instrucutor/InstructorAttendance';
+import InstructorAssignments from '../pages/Instrucutor/InstructorAssignments';
 
  //import AdminFinance from '../pages/AdminFinance';
 // import JobsManagement from '../pages/JobsManagement';
@@ -65,10 +72,13 @@ function AppRouter() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
             <Route path="/profile" element={<ProtectedRoute allowedRoles={['student', 'instructor', 'admin']}><Profile /></ProtectedRoute>} />
-            {/* 
+            
             
             <Route path="/courses" element={<Courses />} />
             <Route path="/courses/:id" element={<CourseDetail />} />
+            {/* 
+            
+            
             
             //routes for users
 
@@ -93,12 +103,16 @@ function AppRouter() {
              */}
 
             {/* Instructor Routes */}
-            {/* <Route path="/instructor/dashboard" element={<ProtectedRoute allowedRoles={['instructor', 'admin']}><InstructorDashboard /></ProtectedRoute>} />
+            <Route path="/instructor/dashboard" element={<ProtectedRoute allowedRoles={['instructor', 'admin']}><InstructorDashboard /></ProtectedRoute>} />
             <Route path="/instructor/courses" element={<ProtectedRoute allowedRoles={['instructor', 'admin']}><ManageCourses /></ProtectedRoute>} />
-            <Route path="/instructor/blogs" element={<ProtectedRoute allowedRoles={['instructor', 'admin']}><ManageBlogs /></ProtectedRoute>} />
-            <Route path="/instructor/assignments" element={<ProtectedRoute allowedRoles={['instructor', 'admin']}><InstructorAssignments /></ProtectedRoute>} />
-            <Route path="/instructor/grade-assignments" element={<ProtectedRoute allowedRoles={['instructor', 'admin']}><GradeAssignments /></ProtectedRoute>} />
             <Route path="/instructor/attendance" element={<ProtectedRoute allowedRoles={['instructor', 'admin']}><InstructorAttendance /></ProtectedRoute>} />
+            <Route path="/instructor/assignments" element={<ProtectedRoute allowedRoles={['instructor', 'admin']}><InstructorAssignments /></ProtectedRoute>} />
+            {/* 
+            
+            <Route path="/instructor/blogs" element={<ProtectedRoute allowedRoles={['instructor', 'admin']}><ManageBlogs /></ProtectedRoute>} />
+            
+            <Route path="/instructor/grade-assignments" element={<ProtectedRoute allowedRoles={['instructor', 'admin']}><GradeAssignments /></ProtectedRoute>} />
+            
             <Route path="/instructor/resources" element={<ProtectedRoute allowedRoles={['instructor', 'admin']}><UploadResources /></ProtectedRoute>} />
             <Route path="/instructor/verify-completion" element={<ProtectedRoute allowedRoles={['instructor', 'admin']}><VerifyCompletion /></ProtectedRoute>} /> */}
 
