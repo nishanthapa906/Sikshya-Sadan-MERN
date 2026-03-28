@@ -1,172 +1,147 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { authAPI } from '../services/api';
-import { FaUser, FaCheckCircle, FaExclamationCircle } from 'react-icons/fa';
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { toast } from "react-toastify";
 
-const Register = () => {
-    const navigate = useNavigate();
-    const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-        phone: '',
-        role: 'student'
-    });
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
+const baseUrl = "http://localhost:9000/api";
 
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
+function Register() {
+  const navigate = useNavigate();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError('');
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-        if (formData.password !== formData.confirmPassword) {
-            setError("Passwords do not match");
-            setLoading(false);
-            return;
-        }
+  const handleRegister = async (e) => {
+    e.preventDefault();
 
-        try {
-            await authAPI.register(formData);
-            navigate('/login', { state: { message: 'Registration successful! Please login.' } });
-        } catch (err) {
-            setError(err.response?.data?.message || 'Registration failed');
-        } finally {
-            setLoading(false);
-        }
-    };
+    // Check passwords match
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match!");
+      return;
+    }
 
-    return (
-        <div className="section flex-center min-h-screen">
-            <div className="card container" style={{ maxWidth: '900px', display: 'grid', gridTemplateColumns: '1fr 1fr', padding: 0, overflow: 'hidden' }}>
-                {/* LEFT SIDE: BANNER */}
-                <div className="bg-primary-900 text-white p-12 hidden md:flex flex-col justify-between">
-                    <div>
-                        <div className="mb-8 p-4 bg-white/10 rounded-xl inline-block">
-                            <FaUser size={30} className="text-primary-300" />
-                        </div>
-                        <h2 className="text-white mb-6 italic">Join the Tech Elite</h2>
-                        <p className="opacity-80 leading-relaxed font-light">
-                            Unlock premium courses, expert mentorship, and global job placements in Nepal's leading IT ecosystem.
-                        </p>
-                    </div>
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-3 text-sm text-emerald-400 font-bold">
-                            <FaCheckCircle /> Lifetime Community Access
-                        </div>
-                        <div className="flex items-center gap-3 text-sm text-emerald-400 font-bold">
-                            <FaCheckCircle /> Hands-on Project Learning
-                        </div>
-                        <div className="flex items-center gap-3 text-sm text-emerald-400 font-bold">
-                            <FaCheckCircle /> Verified Certifications
-                        </div>
-                    </div>
-                </div>
+    try {
+      setIsLoading(true);
 
-                {/* RIGHT SIDE: FORM */}
-                <div className="p-10 space-y-8">
-                    <div className="text-center md:text-left">
-                        <h3 className="italic mb-2">Create Account</h3>
-                        <p className="badge badge-primary">Student Profile</p>
-                    </div>
+      let res = await fetch(`${baseUrl}/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, phone, password, role: "student" }),
+      });
+      res = await res.json();
 
-                    {error && (
-                        <div className="form-error bg-red-50 p-4 rounded-lg flex items-center gap-3">
-                            <FaExclamationCircle /> {error}
-                        </div>
-                    )}
+      if (res.success) {
+        toast.success("Account created successfully! Please login.");
+        navigate("/login");
+      } else {
+        toast.error(res.message || "Registration failed. Try again.");
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="grid md:grid-cols-2 gap-4">
-                            <div className="form-group">
-                                <label className="form-label">Full Name</label>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    required
-                                    className="form-input"
-                                    placeholder="Enter full name"
-                                    value={formData.name}
-                                    onChange={handleChange}
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label className="form-label">Phone</label>
-                                <input
-                                    type="text"
-                                    name="phone"
-                                    required
-                                    className="form-input"
-                                    placeholder="98XXXXXXXX"
-                                    value={formData.phone}
-                                    onChange={handleChange}
-                                />
-                            </div>
-                        </div>
+  return (
+    <main className="mt-20 mb-20 m-auto w-[65%] min-w-[300px] flex justify-center bg-white shadow-lg shadow-gray-300 rounded-lg p-10">
+      <div className="w-full space-y-5">
 
-                        <div className="form-group">
-                            <label className="form-label">Email Address</label>
-                            <input
-                                type="email"
-                                name="email"
-                                required
-                                className="form-input"
-                                placeholder="name@email.com"
-                                value={formData.email}
-                                onChange={handleChange}
-                            />
-                        </div>
-
-                        <div className="grid md:grid-cols-2 gap-4">
-                            <div className="form-group">
-                                <label className="form-label">Password</label>
-                                <input
-                                    type="password"
-                                    name="password"
-                                    required
-                                    className="form-input"
-                                    placeholder="••••••••"
-                                    value={formData.password}
-                                    onChange={handleChange}
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label className="form-label">Confirm</label>
-                                <input
-                                    type="password"
-                                    name="confirmPassword"
-                                    required
-                                    className="form-input"
-                                    placeholder="••••••••"
-                                    value={formData.confirmPassword}
-                                    onChange={handleChange}
-                                />
-                            </div>
-                        </div>
-
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="btn btn-primary btn-block"
-                        >
-                            {loading ? 'Processing...' : 'Complete Registration'}
-                        </button>
-                    </form>
-
-                    <div className="text-center mt-6">
-                        <p className="text-gray-500 font-medium">
-                            Already have an account? <Link to="/login" className="text-primary-600 font-bold hover:underline">Sign In</Link>
-                        </p>
-                    </div>
-                </div>
-            </div>
+        {/* Heading */}
+        <div className="text-center mb-10">
+          <h1 className="text-3xl font-bold">Sikshya Sadan Register</h1>
+          <p className="text-xl text-gray-500 mt-2">Create an account to get started.</p>
         </div>
-    );
-};
+
+        {/* Form */}
+        <form onSubmit={handleRegister} className="space-y-6">
+
+          <div className="flex flex-col gap-y-2 text-xl">
+            <label className="font-semibold">Full Name</label>
+            <input
+              type="text"
+              required
+              placeholder="Your full name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="border p-3 rounded-md outline-none focus:border-blue-500"
+            />
+          </div>
+
+          <div className="flex flex-col gap-y-2 text-xl">
+            <label className="font-semibold">Phone Number</label>
+            <input
+              type="text"
+              required
+              placeholder="98XXXXXXXX"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="border p-3 rounded-md outline-none focus:border-blue-500"
+            />
+          </div>
+
+          <div className="flex flex-col gap-y-2 text-xl">
+            <label className="font-semibold">Email Address</label>
+            <input
+              type="email"
+              required
+              placeholder="your@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="border p-3 rounded-md outline-none focus:border-blue-500"
+            />
+          </div>
+
+          <div className="flex flex-col gap-y-2 text-xl">
+            <label className="font-semibold">Password</label>
+            <input
+              type="password"
+              required
+              placeholder="Enter password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="border p-3 rounded-md outline-none focus:border-blue-500"
+            />
+          </div>
+
+          <div className="flex flex-col gap-y-2 text-xl">
+            <label className="font-semibold">Confirm Password</label>
+            <input
+              type="password"
+              required
+              placeholder="Confirm password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="border p-3 rounded-md outline-none focus:border-blue-500"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="bg-blue-600 hover:bg-blue-700 p-4 text-white text-xl font-bold w-full rounded-md mt-5"
+          >
+            {isLoading ? "Creating Account..." : "Sign Up"}
+          </button>
+        </form>
+
+        {/* Login Link */}
+        <div className="text-center text-lg mt-8">
+          <p>
+            Already have an account?{" "}
+            <Link to="/login" className="text-blue-600 font-bold hover:underline">
+              Login Here
+            </Link>
+          </p>
+        </div>
+
+      </div>
+    </main>
+  );
+}
 
 export default Register;

@@ -4,7 +4,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 // Pages
 import Home from '../pages/Home';
 // import Login from '../pages/Login';
-// import Register from '../pages/Register';
+import Register from '../pages/Register';
 // import Courses from '../pages/Courses';
 // import CourseDetail from '../pages/CourseDetail';
 // import About from '../pages/About';
@@ -59,8 +59,9 @@ function AppRouter() {
         <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
-            {/* <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            {/* <Route path="/login" element={<Login />} />
+            
             <Route path="/courses" element={<Courses />} />
             <Route path="/courses/:id" element={<CourseDetail />} />
             <Route path="/about" element={<About />} />
