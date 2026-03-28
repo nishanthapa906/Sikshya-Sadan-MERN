@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-// import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 // Pages
 import Home from '../pages/Home';
@@ -7,7 +7,6 @@ import Home from '../pages/Home';
 import Register from '../pages/Register';
 // import Courses from '../pages/Courses';
 // import CourseDetail from '../pages/CourseDetail';
-// import About from '../pages/About';
  import Contact from '../pages/Contact';
 // import Jobs from '../pages/Jobs';
 // import Blog from '../pages/Blog';
@@ -15,7 +14,8 @@ import Register from '../pages/Register';
 // import Admission from '../pages/Admission';
 // import PaymentSuccess from '../pages/PaymentSuccess';
 // import PaymentFailure from '../pages/PaymentFailure';
-// import Profile from '../pages/Profile';
+ import Profile from '../pages/Profile';
+import About from '../pages/About';
 
 // Student Portal Pages
 // import StudentDashboard from '../pages/StudentDashboard';
@@ -42,17 +42,17 @@ import Register from '../pages/Register';
 // import JobsManagement from '../pages/JobsManagement';
 
 // Protected Route
-// const ProtectedRoute = ({ children, allowedRoles }) => {
-//     const { user, loading } = useAuth();
-//     if (loading) return (
-//         <div className="loading-container">
-//             <div className="spinner"></div>
-//         </div>
-//     );
-//     if (!user) return <Navigate to="/login" replace />;
-//     if (allowedRoles && !allowedRoles.includes(user.role)) return <Navigate to="/" replace />;
-//     return children;
-// };
+const ProtectedRoute = ({ children, allowedRoles }) => {
+    const { user, loading } = useAuth();
+    if (loading) return (
+        <div className="loading-container">
+            <div className="spinner"></div>
+        </div>
+    );
+    if (!user) return <Navigate to="/login" replace />;
+    if (allowedRoles && !allowedRoles.includes(user.role)) return <Navigate to="/" replace />;
+    return children;
+};
 
 function AppRouter() {
     return (
@@ -60,14 +60,15 @@ function AppRouter() {
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
             <Route path="/register" element={<Register />} />
-
             <Route path="/login" element={<Login />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/profile" element={<ProtectedRoute allowedRoles={['student', 'instructor', 'admin']}><Profile /></ProtectedRoute>} />
             {/* 
             
             <Route path="/courses" element={<Courses />} />
             <Route path="/courses/:id" element={<CourseDetail />} />
-            <Route path="/about" element={<About />} />
+            
             
             <Route path="/jobs" element={<Jobs />} />
             <Route path="/blog" element={<Blog />} />
@@ -75,7 +76,7 @@ function AppRouter() {
             <Route path="/admission" element={<Admission />} />
             <Route path="/payment/success" element={<PaymentSuccess />} />
             <Route path="/payment/failure" element={<PaymentFailure />} />
-            <Route path="/profile" element={<ProtectedRoute allowedRoles={['student', 'instructor', 'admin']}><Profile /></ProtectedRoute>} /> */}
+             */}
 
             {/* Student Routes */}
             {/* <Route path="/student/dashboard" element={<ProtectedRoute allowedRoles={['student']}><StudentDashboard /></ProtectedRoute>} />
