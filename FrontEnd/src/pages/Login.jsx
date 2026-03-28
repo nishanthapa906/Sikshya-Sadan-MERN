@@ -1,95 +1,99 @@
-import React, { useState } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { FaLock, FaEnvelope, FaExclamationCircle } from 'react-icons/fa';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { useAuth } from "../context/AuthContext";
 
-const Login = () => {
-    const { login } = useAuth();
-    const navigate = useNavigate();
-    const location = useLocation();
-    const [formData, setFormData] = useState({ email: '', password: '' });
-    const [error, setError] = useState(location.state?.message || '');
-    const [loading, setLoading] = useState(false);
+function Login() {
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-        const result = await login(formData.email, formData.password);
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
 
-        if (result.success) {
-            const dashboardPath = result.user.role === 'admin' ? '/admin/dashboard' :
-                result.user.role === 'instructor' ? '/instructor/dashboard' :
-                    '/student/dashboard';
-            navigate(dashboardPath);
-        } else {
-            setError(result.message);
-            setLoading(false);
-        }
-    };
+    // Call login from context
+    const result = await login(email, password);
 
-    return (
-        <div className="section flex-center min-h-screen">
-            <div className="card" style={{ maxWidth: '450px', width: '100%' }}>
-                <div className="text-center mb-10">
-                    <h3 className="italic mb-2">Welcome Back</h3>
-                    <p className="badge badge-info">Secure Access</p>
-                </div>
+    if (result.success) {
+      toast.success("Welcome back! 👋");
 
-                {error && (
-                    <div className="form-error bg-red-50 p-4 rounded-lg flex items-center gap-3 mb-6">
-                        <FaExclamationCircle /> {error}
-                    </div>
-                )}
+      // Go to correct dashboard based on role
+      if (result.user.role === "admin") {
+        navigate("/admin/dashboard");
+      } else if (result.user.role === "instructor") {
+        navigate("/instructor/dashboard");
+      } else {
+        navigate("/student/dashboard");
+      }
+    } else {
+      toast.error(result.message || "Login failed!");
+      setIsLoading(false);
+    }
+  };
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="form-group">
-                        <label className="form-label">Email Address</label>
-                        <div className="relative">
-                            <input
-                                type="email"
-                                required
-                                className="form-input"
-                                placeholder="your@email.com"
-                                value={formData.email}
-                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                            />
-                        </div>
-                    </div>
+  return (
+    <main className="mt-20 mb-20 m-auto w-[65%] min-w-[300px] flex justify-center bg-white shadow-lg shadow-gray-300 rounded-lg p-10">
+      <div className="w-full space-y-5">
 
-                    <div className="form-group">
-                        <div className="flex-between mb-2">
-                            <label className="form-label" style={{ marginBottom: 0 }}>Password</label>
-                            <Link to="/forgot-password" size="sm" className="text-xs font-bold text-primary-600">Forgot?</Link>
-                        </div>
-                        <input
-                            type="password"
-                            required
-                            className="form-input"
-                            placeholder="••••••••"
-                            value={formData.password}
-                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        />
-                    </div>
-
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="btn btn-primary btn-block"
-                    >
-                        {loading ? 'Authorizing...' : 'Sign In Now'}
-                    </button>
-                </form>
-
-                <div className="text-center mt-8">
-                    <p className="text-gray-500 font-medium">
-                        New here? <Link to="/register" className="text-primary-600 font-bold hover:underline">Create Account</Link>
-                    </p>
-                </div>
-            </div>
+        {/* Heading */}
+        <div className="text-center mb-10">
+          <h1 className="text-3xl font-bold">Sikshya Sadan Login</h1>
+          <p className="text-xl text-gray-500 mt-2">Welcome back! Please enter your details.</p>
         </div>
-    );
-};
+
+        {/* Form */}
+        <form onSubmit={handleLogin} className="space-y-6">
+
+          <div className="flex flex-col gap-y-2 text-xl">
+            <label className="font-semibold">Email Address</label>
+            <input
+              type="email"
+              required
+              placeholder="your@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="border p-3 rounded-md outline-none focus:border-blue-500"
+            />
+          </div>
+
+          <div className="flex flex-col gap-y-2 text-xl">
+            <label className="font-semibold">Password</label>
+            <input
+              type="password"
+              required
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="border p-3 rounded-md outline-none focus:border-blue-500"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="bg-blue-600 hover:bg-blue-700 p-4 text-white text-xl font-bold w-full rounded-md mt-5"
+          >
+            {isLoading ? "Signing In..." : "Sign In"}
+          </button>
+        </form>
+
+        {/* Register link */}
+        <div className="text-center text-lg mt-8">
+          <p>
+            Don't have an account?{" "}
+            <Link to="/register" className="text-blue-600 font-bold hover:underline">
+              Register Here
+            </Link>
+          </p>
+        </div>
+
+      </div>
+    </main>
+  );
+}
 
 export default Login;

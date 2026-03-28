@@ -48,11 +48,10 @@ const Contact = () => {
     return (
         <div className="bg-slate-50 min-h-screen pt-24 pb-24">
             <div className="container mx-auto px-6">
-                <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
-                    <span className="text-primary-600 font-black uppercase text-xs tracking-widest bg-primary-50 px-6 py-2 rounded-full">Get In Touch</span>
-                    <h1 className="text-5xl font-black text-slate-900 italic">Let's Talk About Your Career</h1>
-                    <p className="text-lg text-slate-500 font-medium leading-relaxed">
-                        Have questions about our courses, placements, or admission process? Our team is here to help you choose the right path.
+                <div className="max-w-3xl mx-auto mb-14">
+                    <h1 className="text-3xl font-bold text-slate-900 mb-3">Contact Us</h1>
+                    <p className="text-slate-500 leading-relaxed">
+                        Have questions about our courses or admission process? Send us a message and we will get back to you soon.
                     </p>
                 </div>
 
@@ -65,23 +64,7 @@ const Contact = () => {
                             </div>
                             <h3 className="text-xl font-bold mb-2">Call Us</h3>
                             <p className="text-slate-500 group-hover:text-slate-300 font-medium">{settings?.phone || '+977-1-1234567'}</p>
-                            <p className="text-xs mt-4 text-primary-600 group-hover:text-primary-400 font-black uppercase tracking-widest">Available 9AM - 6PM</p>
-                        </div>
-                        <div className="bg-white p-10 rounded-[2.5rem] shadow-xl border border-slate-100 flex flex-col items-center text-center group cursor-pointer hover:bg-slate-900 hover:text-white transition-all duration-300">
-                            <div className="h-16 w-16 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 mb-6 group-hover:bg-white/10 group-hover:text-white transition-colors">
-                                <FaEnvelope size={24} />
-                            </div>
-                            <h3 className="text-xl font-bold mb-2">Email Us</h3>
-                            <p className="text-slate-500 group-hover:text-slate-300 font-medium">{settings?.email || 'info@sikshyasadan.com'}</p>
-                            <p className="text-xs mt-4 text-primary-600 group-hover:text-primary-400 font-black uppercase tracking-widest">24/7 Response Rate</p>
-                        </div>
-                        <div className="bg-white p-10 rounded-[2.5rem] shadow-xl border border-slate-100 flex flex-col items-center text-center group cursor-pointer hover:bg-slate-900 hover:text-white transition-all duration-300">
-                            <div className="h-16 w-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 mb-6 group-hover:bg-white/10 group-hover:text-white transition-colors">
-                                <FaMapMarkerAlt size={24} />
-                            </div>
-                            <h3 className="text-xl font-bold mb-2">Visit Us</h3>
-                            <p className="text-slate-500 group-hover:text-slate-300 font-medium">{settings?.address || 'Kathmandu, Nepal'}</p>
-                            <p className="text-xs mt-4 text-primary-600 group-hover:text-primary-400 font-black uppercase tracking-widest">Corporate Head Office</p>
+                            <p className="text-xs mt-4 text-slate-400 font-medium">Mon – Fri, 9AM to 6PM</p>
                         </div>
                     </div>
 
@@ -89,8 +72,9 @@ const Contact = () => {
                     <div className="lg:col-span-2">
                         <form onSubmit={handleSubmit} className="bg-white p-12 rounded-[3.5rem] shadow-2xl border border-slate-100 space-y-8 relative overflow-hidden">
                             <div className="absolute top-0 right-0 h-40 w-40 bg-primary-600/5 rounded-full -mr-20 -mt-20"></div>
-                            <div className="relative z-10 flex items-center gap-4 text-primary-600 font-black text-2xl uppercase tracking-wider mb-2">
-                                <FaCommentDots size={32} /> Send an Inquiry
+                            <div className="relative z-10 mb-2">
+                                <h2 className="text-xl font-bold text-slate-900">Send a Message</h2>
+                                <p className="text-sm text-slate-500 mt-1">We typically reply within 24 hours.</p>
                             </div>
 
                             {status.msg && (

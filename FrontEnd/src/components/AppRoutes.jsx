@@ -3,12 +3,12 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 
 // Pages
 import Home from '../pages/Home';
-// import Login from '../pages/Login';
+ import Login from '../pages/Login';
 import Register from '../pages/Register';
 // import Courses from '../pages/Courses';
 // import CourseDetail from '../pages/CourseDetail';
 // import About from '../pages/About';
-// import Contact from '../pages/Contact';
+ import Contact from '../pages/Contact';
 // import Jobs from '../pages/Jobs';
 // import Blog from '../pages/Blog';
 // import BlogDetail from '../pages/BlogDetail';
@@ -60,12 +60,15 @@ function AppRouter() {
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
             <Route path="/register" element={<Register />} />
-            {/* <Route path="/login" element={<Login />} />
+
+            <Route path="/login" element={<Login />} />
+            <Route path="/contact" element={<Contact />} />
+            {/* 
             
             <Route path="/courses" element={<Courses />} />
             <Route path="/courses/:id" element={<CourseDetail />} />
             <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
+            
             <Route path="/jobs" element={<Jobs />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:slug" element={<BlogDetail />} />

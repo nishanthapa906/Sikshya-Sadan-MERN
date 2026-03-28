@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-
-const baseUrl = "http://localhost:9000/api";
+import { useAuth } from "../context/AuthContext";
 
 function Register() {
+  const { register } = useAuth();
   const navigate = useNavigate();
 
   const [name, setName] = useState("");
@@ -23,26 +23,16 @@ function Register() {
       return;
     }
 
-    try {
-      setIsLoading(true);
+    setIsLoading(true);
 
-      let res = await fetch(`${baseUrl}/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, phone, password, role: "student" }),
-      });
-      res = await res.json();
+    // Call register from context
+    const result = await register({ name, email, phone, password, role: "student" });
 
-      if (res.success) {
-        toast.success("Account created successfully! Please login.");
-        navigate("/login");
-      } else {
-        toast.error(res.message || "Registration failed. Try again.");
-      }
-    } catch (error) {
-      console.log(error);
-      toast.error("Something went wrong. Please try again.");
-    } finally {
+    if (result.success) {
+      toast.success("Account created! Welcome 🎉");
+      navigate("/student/dashboard");
+    } else {
+      toast.error(result.message || "Registration failed!");
       setIsLoading(false);
     }
   };
@@ -129,7 +119,7 @@ function Register() {
           </button>
         </form>
 
-        {/* Login Link */}
+        {/* Login link */}
         <div className="text-center text-lg mt-8">
           <p>
             Already have an account?{" "}
