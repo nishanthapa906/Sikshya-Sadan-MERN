@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { FaClock, FaUsers, FaStar, FaCheckCircle, FaChevronDown, FaChevronUp, FaGraduationCap, FaArrowRight, FaVideo, FaBookmark, FaFileAlt } from 'react-icons/fa';
-import { courseAPI, demoSlotAPI, studentAPI, UPLOAD_URL } from '../services/api';
+import { courseAPI, demoSlotAPI, studentAPI, UPLOAD_URL } from '../../services/api';
 
 const CourseDetail = () => {
     const { id } = useParams();

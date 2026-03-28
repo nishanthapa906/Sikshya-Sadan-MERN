@@ -18,9 +18,9 @@ import Register from '../pages/Register';
 import About from '../pages/About';
 
 // Student Portal Pages
-// import StudentDashboard from '../pages/StudentDashboard';
-// import StudentCourseView from '../pages/StudentCourseView';
-// import MyCourses from '../pages/MyCourses';
+ import StudentDashboard from '../pages/students/StudentDashboard';
+ import StudentCourseView from '../pages/students/StudentCourseView';
+ import MyCourses from '../pages/courses/MyCourses';
 // import Assignments from '../pages/Assignments';
 // import Certificates from '../pages/Certificates';
 // import StudentFinance from '../pages/StudentFinance';
@@ -36,9 +36,10 @@ import About from '../pages/About';
 // import VerifyCompletion from '../pages/VerifyCompletion';
 
 // Admin Portal Pages
-// import AdminDashboard from '../pages/AdminDashboard';
-// import Users from '../pages/Users';
-// import AdminFinance from '../pages/AdminFinance';
+ import AdminDashboard from '../pages/Admin/AdminDashboard';
+import Users from '../pages/Admin/Users';
+
+ //import AdminFinance from '../pages/AdminFinance';
 // import JobsManagement from '../pages/JobsManagement';
 
 // Protected Route
@@ -69,6 +70,8 @@ function AppRouter() {
             <Route path="/courses" element={<Courses />} />
             <Route path="/courses/:id" element={<CourseDetail />} />
             
+            //routes for users
+
             
             <Route path="/jobs" element={<Jobs />} />
             <Route path="/blog" element={<Blog />} />
@@ -79,12 +82,15 @@ function AppRouter() {
              */}
 
             {/* Student Routes */}
-            {/* <Route path="/student/dashboard" element={<ProtectedRoute allowedRoles={['student']}><StudentDashboard /></ProtectedRoute>} />
+            <Route path="/student/dashboard" element={<ProtectedRoute allowedRoles={['student']}><StudentDashboard /></ProtectedRoute>} />
             <Route path="/student/my-courses" element={<ProtectedRoute allowedRoles={['student']}><MyCourses /></ProtectedRoute>} />
+            <Route path="/student/course/:id" element={<ProtectedRoute allowedRoles={['student']}><StudentCourseView /></ProtectedRoute>} />
+            {/* 
+            
             <Route path="/student/assignments" element={<ProtectedRoute allowedRoles={['student']}><Assignments /></ProtectedRoute>} />
             <Route path="/student/certificates" element={<ProtectedRoute allowedRoles={['student']}><Certificates /></ProtectedRoute>} />
             <Route path="/student/finance" element={<ProtectedRoute allowedRoles={['student']}><StudentFinance /></ProtectedRoute>} />
-            <Route path="/student/course/:id" element={<ProtectedRoute allowedRoles={['student']}><StudentCourseView /></ProtectedRoute>} /> */}
+             */}
 
             {/* Instructor Routes */}
             {/* <Route path="/instructor/dashboard" element={<ProtectedRoute allowedRoles={['instructor', 'admin']}><InstructorDashboard /></ProtectedRoute>} />
@@ -97,8 +103,10 @@ function AppRouter() {
             <Route path="/instructor/verify-completion" element={<ProtectedRoute allowedRoles={['instructor', 'admin']}><VerifyCompletion /></ProtectedRoute>} /> */}
 
             {/* Admin Routes */}
-            {/* <Route path="/admin/dashboard" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/admin/dashboard" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
             <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['admin']}><Users /></ProtectedRoute>} />
+            {/* 
+            
             <Route path="/admin/finance" element={<ProtectedRoute allowedRoles={['admin']}><AdminFinance /></ProtectedRoute>} />
             <Route path="/admin/jobs" element={<ProtectedRoute allowedRoles={['admin']}><JobsManagement /></ProtectedRoute>} /> */}
 

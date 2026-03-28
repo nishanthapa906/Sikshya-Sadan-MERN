@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { adminAPI } from "../services/api";
-import UserTable from "../components/users/UserTable";
-import UserFilters from "../components/users/UserFilters";
-import CreateUserModal from "../components/users/CreateUserModal";
-import EditUserModal from "../components/users/EditUserModal";
+import { adminAPI } from "../../services/api";
+import EditUserModal from "../../components/users_con_byadmin/EditUserModal";
+import UserFilters from "../../components/users_con_byadmin/UserFilter";
+import UserTable from "../../components/users_con_byadmin/UserTable";
+import CreateUserModal from "../../components/users_con_byadmin/CreateUserModal";
+
 
 
 
