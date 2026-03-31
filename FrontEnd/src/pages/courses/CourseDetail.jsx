@@ -107,7 +107,9 @@ const CourseDetail = () => {
                                     </div>
                                     <div>
                                         <p className="text-xs text-slate-400 font-bold uppercase">Rating</p>
-                                        <p className="text-lg font-bold">{course.rating || '5.0'} / 5.0</p>
+                                        <p className="text-lg font-bold">
+                                            {course.rating !== undefined && course.rating !== null && course.rating !== 0 ? `${course.rating} / 5.0` : 'N/A'}
+                                        </p>
                                     </div>
                                 </div>
                                 <div className="h-10 w-px bg-slate-700 hidden md:block"></div>

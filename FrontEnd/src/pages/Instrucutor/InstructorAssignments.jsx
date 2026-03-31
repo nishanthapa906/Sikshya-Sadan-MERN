@@ -47,7 +47,7 @@ const InstructorAssignments = () => {
     const fetchAssignments = async () => {
         try {
             const response = await instructorAPI.getCourseAssignments(selectedCourse);
-            setAssignments(response.data.assignments || []);
+            setAssignments(response.data.data || response.data.assignments || []);
         } catch (err) {
             console.error('Failed to load assignments:', err);
         }
@@ -66,7 +66,7 @@ const InstructorAssignments = () => {
             const data = new FormData();
             data.append('title', formData.title);
             data.append('description', formData.description);
-            data.append('dueDate', formData.dueDate);
+            data.append('dueDate', new Date(formData.dueDate).toISOString());
             data.append('maxMarks', formData.maxMarks);
 
             if (attachments.length > 0) {

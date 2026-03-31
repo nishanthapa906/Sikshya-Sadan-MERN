@@ -68,9 +68,20 @@ const ManageBlogs = () => {
         e.preventDefault();
         try {
             const data = new FormData();
-            Object.keys(formData).forEach(key => {
-                data.append(key, formData[key]);
-            });
+            const slug = formData.title
+                .toLowerCase()
+                .trim()
+                .replace(/[^a-z0-9\s-]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-');
+
+            data.append('title', formData.title);
+            data.append('category', formData.category);
+            data.append('content', formData.content);
+            data.append('tags', formData.tags);
+            data.append('slug', isEditing ? slug || `blog-${editingId}` : `${slug}-${Date.now()}`);
+            data.append('excerpt', formData.content.slice(0, 180));
+            data.append('isPublished', formData.status === 'published');
 
             if (thumbnail) {
                 data.append('thumbnail', thumbnail);
@@ -96,7 +107,7 @@ const ManageBlogs = () => {
             category: blog.category,
             content: blog.content,
             tags: blog.tags.join(', '),
-            status: blog.status
+            status: blog.isPublished ? 'published' : 'draft'
         });
         setPreviewUrl(blog.thumbnail ? `${UPLOAD_URL}/${blog.thumbnail}` : null);
         setIsEditing(true);
@@ -272,8 +283,8 @@ const ManageBlogs = () => {
                                         <span className="bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-primary-600">
                                             {blog.category}
                                         </span>
-                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${blog.status === 'published' ? 'bg-emerald-500 text-white' : 'bg-amber-400 text-white'}`}>
-                                            {blog.status}
+                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${blog.isPublished ? 'bg-emerald-500 text-white' : 'bg-amber-400 text-white'}`}>
+                                            {blog.isPublished ? 'published' : 'draft'}
                                         </span>
                                     </div>
                                 </div>

@@ -1,5 +1,7 @@
 import Course from '../models/courseModel.js';
-// import Assignment from '../models/assignmentModel.js';
+import Assignment from '../models/assignmentModel.js';
+import Submission from '../models/submissionModel.js';
+import Certificate from '../models/certificateModel.js';
 import Enrollment from '../models/enrollmentModel.js';
 
 // Dashboard
@@ -148,19 +150,33 @@ export const deleteResource = async (req, res) => {
 // Attendance - prevents double marking on same calendar date
 export const markAttendance = async (req, res) => {
     try {
+        const toLocalDateString = (value = new Date()) => {
+            const d = new Date(value);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+
         const enrollment = await Enrollment.findById(req.params.enrollmentId);
         if (!enrollment) {
             return res.status(404).json({ status: 404, success: false, message: 'Enrollment not found' });
         }
 
-        // Normalize the date to just YYYY-MM-DD for comparison
-        const today = new Date();
-        const targetDate = req.body.date ? new Date(req.body.date) : today;
-        const targetDateStr = targetDate.toISOString().split('T')[0];
-        const todayStr = today.toISOString().split('T')[0];
+        if (!['present', 'late', 'absent'].includes(req.body.status)) {
+            return res.status(400).json({
+                status: 400,
+                success: false,
+                message: 'Invalid attendance status.'
+            });
+        }
 
-        // 🚨 LOGIC: Prevent marking for future dates
-        if (targetDate > today && targetDateStr !== todayStr) {
+        // Keep date comparisons timezone-safe using local YYYY-MM-DD
+        const targetDateStr = req.body.date || toLocalDateString();
+        const todayStr = toLocalDateString();
+
+        // Prevent future attendance marking
+        if (targetDateStr > todayStr) {
             return res.status(400).json({
                 status: 400,
                 success: false,
@@ -170,7 +186,7 @@ export const markAttendance = async (req, res) => {
 
         // Check if attendance already recorded for that date
         const alreadyMarked = enrollment.attendance.find(a => {
-            const existingDateStr = new Date(a.date).toISOString().split('T')[0];
+            const existingDateStr = toLocalDateString(a.date);
             return existingDateStr === targetDateStr;
         });
 
@@ -211,14 +227,111 @@ export const getCourseResources = async (req, res) => {
 export const updateEnrollment = async (req, res) => {
     try {
         const updateData = { ...req.body };
-        // Auto-stamp completionDate when instructor marks as completed
+        const enrollment = await Enrollment.findById(req.params.id).populate('course', 'instructor title');
+        if (!enrollment) {
+            return res.status(404).json({ status: 404, success: false, message: 'Enrollment not found' });
+        }
+
+        if (enrollment.course?.instructor?.toString() !== req.user.id && req.user.role !== 'admin') {
+            return res.status(403).json({ status: 403, success: false, message: 'Access denied' });
+        }
+
         if (updateData.status === 'completed') {
+            // Keep minimum business rule: payment must be settled.
+            if (!['completed', 'installment'].includes(enrollment.paymentStatus)) {
+                return res.status(400).json({ status: 400, success: false, message: 'Student payment must be completed first.' });
+            }
             updateData.completionDate = new Date();
         }
-        const enrollment = await Enrollment.findByIdAndUpdate(req.params.id, updateData, { new: true });
-        res.status(200).json({ status: 200, success: true, message: 'Enrollment Updated Successfully!', enrollment });
+
+        const updatedEnrollment = await Enrollment.findByIdAndUpdate(req.params.id, updateData, { returnDocument: 'after' });
+        res.status(200).json({ status: 200, success: true, message: 'Enrollment Updated Successfully!', enrollment: updatedEnrollment });
     } catch (error) {
         res.status(500).json({ status: 500, success: false, message: error.message });
+    }
+};
+
+export const uploadCertificate = async (req, res) => {
+    try {
+        const { enrollmentId } = req.params;
+        const enrollment = await Enrollment.findById(enrollmentId)
+            .populate('student', 'name')
+            .populate('course', 'title duration instructor');
+
+        if (!enrollment) {
+            return res.status(404).json({ status: 404, success: false, message: 'Enrollment not found' });
+        }
+
+        if (enrollment.course?.instructor?.toString() !== req.user.id && req.user.role !== 'admin') {
+            return res.status(403).json({ status: 403, success: false, message: 'Access denied' });
+        }
+
+        if (enrollment.status !== 'completed') {
+            return res.status(400).json({ status: 400, success: false, message: 'Mark student completed before uploading certificate.' });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({ status: 400, success: false, message: 'Certificate image file is required.' });
+        }
+
+        const submissions = await Submission.find({
+            student: enrollment.student._id,
+            course: enrollment.course._id
+        });
+        const gradedSubmissions = submissions.filter(s => s.grade !== null && s.grade !== undefined);
+        const finalGrade = gradedSubmissions.length > 0
+            ? Math.round(gradedSubmissions.reduce((sum, s) => sum + s.grade, 0) / gradedSubmissions.length)
+            : 0;
+
+        let certificate = await Certificate.findOne({
+            student: enrollment.student._id,
+            course: enrollment.course._id
+        });
+
+        if (!certificate) {
+            certificate = new Certificate({
+                student: enrollment.student._id,
+                course: enrollment.course._id,
+                completionDate: enrollment.completionDate || new Date(),
+                issuedDate: new Date()
+            });
+        }
+
+        certificate.status = 'issued';
+        certificate.claimStatus = certificate.claimStatus || 'not-claimed';
+        certificate.certificateImage = req.file.filename;
+        certificate.issuedBy = req.user.id;
+        certificate.finalGrade = finalGrade;
+        certificate.totalScore = finalGrade;
+        certificate.submissionDetails = {
+            totalAssignments: submissions.length,
+            completedAssignments: submissions.length,
+            assignmentScores: gradedSubmissions.map(s => s.grade)
+        };
+        certificate.courseDetails = {
+            duration: String(enrollment.course?.duration || 'Self-paced'),
+            instructor: enrollment.course?.instructor?.name || 'Instructor'
+        };
+        certificate.remarks = req.body?.remarks || certificate.remarks;
+        certificate.completionDate = enrollment.completionDate || certificate.completionDate || new Date();
+        certificate.issuedDate = new Date();
+
+        await certificate.save();
+
+        enrollment.certificateIssued = true;
+        enrollment.certificateId = certificate.certificateNumber;
+        enrollment.certificateIssuedDate = certificate.issuedDate;
+        enrollment.certificateUrl = certificate.certificateImage;
+        await enrollment.save();
+
+        return res.status(200).json({
+            status: 200,
+            success: true,
+            message: 'Certificate uploaded and issued successfully.',
+            data: certificate
+        });
+    } catch (error) {
+        return res.status(500).json({ status: 500, success: false, message: error.message });
     }
 };
 // Get Assignment Submissions

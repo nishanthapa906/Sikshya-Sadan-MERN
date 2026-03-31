@@ -14,7 +14,10 @@ import {
 } from "react-icons/fa";
 
 function Navbar() {
-  const { user, logout, isAuthenticated } = useAuth();
+  const auth = useAuth();
+  const user = auth?.user || null;
+  const logout = auth?.logout || (() => {});
+  const isAuthenticated = !!auth?.isAuthenticated;
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -58,7 +61,7 @@ function Navbar() {
             : "bg-white shadow border-b border-gray-200"
         }`}
       >
-        <div className="flex justify-between items-center px-10 h-16">
+        <div className="flex justify-between items-center px-4 sm:px-6 lg:px-10 h-16">
 
           {/* LOGO */}
           <NavLink to="/" className="flex items-center gap-2">
@@ -117,9 +120,9 @@ function Navbar() {
                   }`}
                 >
                   <div className="h-7 w-7 rounded bg-indigo-600 text-white flex items-center justify-center overflow-hidden text-xs font-bold">
-                    {user?.photo ? (
+                    {user?.avatar ? (
                       <img
-                        src={`${UPLOAD_URL}/${user.photo}`}
+                        src={`${UPLOAD_URL}/${user.avatar}`}
                         alt=""
                         className="h-full w-full object-cover"
                       />
@@ -148,6 +151,23 @@ function Navbar() {
                   >
                     <FaUser /> Profile
                   </NavLink>
+
+                  {(user?.role === "instructor" || user?.role === "admin") && (
+                    <>
+                      <NavLink
+                        to="/instructor/blogs"
+                        className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded"
+                      >
+                        Blogs
+                      </NavLink>
+                      <NavLink
+                        to="/instructor/verify-completion"
+                        className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded"
+                      >
+                        Verify Completion
+                      </NavLink>
+                    </>
+                  )}
 
                   <button
                     onClick={handleLogout}
@@ -196,13 +216,13 @@ function Navbar() {
 
       {/* MOBILE MENU */}
       {menuOpen && (
-        <div className="fixed inset-0 bg-gray-900 text-white p-8 pt-20 lg:hidden flex flex-col gap-6">
+        <div className="fixed inset-0 bg-slate-900 text-white p-6 pt-20 lg:hidden flex flex-col gap-4 overflow-y-auto">
 
           {navLinks.map((link) => (
             <NavLink
               key={link.path}
               to={link.path}
-              className="text-2xl font-bold"
+              className="text-xl font-bold py-1 border-b border-white/10"
               onClick={() => setMenuOpen(false)}
             >
               {link.name}
@@ -211,14 +231,20 @@ function Navbar() {
 
           {isAuthenticated ? (
             <>
-              <NavLink to={`/${user?.role}/dashboard`}>Dashboard</NavLink>
-              <NavLink to="/profile">Profile</NavLink>
-              <button onClick={handleLogout}>Logout</button>
+              <NavLink to={`/${user?.role}/dashboard`} className="py-1 border-b border-white/10">Dashboard</NavLink>
+              <NavLink to="/profile" className="py-1 border-b border-white/10">Profile</NavLink>
+              {(user?.role === "instructor" || user?.role === "admin") && (
+                <>
+                  <NavLink to="/instructor/blogs" className="py-1 border-b border-white/10">Blogs</NavLink>
+                  <NavLink to="/instructor/verify-completion" className="py-1 border-b border-white/10">Verify Completion</NavLink>
+                </>
+              )}
+              <button onClick={handleLogout} className="text-left py-1 border-b border-white/10">Logout</button>
             </>
           ) : (
             <>
-              <NavLink to="/login">Sign In</NavLink>
-              <NavLink to="/register">Create Account</NavLink>
+              <NavLink to="/login" className="py-1 border-b border-white/10">Sign In</NavLink>
+              <NavLink to="/register" className="py-1 border-b border-white/10">Create Account</NavLink>
             </>
           )}
         </div>

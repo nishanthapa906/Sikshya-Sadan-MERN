@@ -15,7 +15,7 @@ const certificateSchema = new mongoose.Schema(
         certificateNumber: {
             type: String,
             unique: true,
-            required: true
+            required: false
         },
         completionDate: {
             type: Date,
@@ -54,6 +54,14 @@ const certificateSchema = new mongoose.Schema(
             duration: String,
             instructor: String
         },
+        certificateImage: {
+            type: String,
+            default: null
+        },
+        issuedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        },
         remarks: {
             type: String,
             default: null
@@ -75,19 +83,17 @@ const certificateSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-// Generate certificate number before saving
-certificateSchema.pre('save', async function(next) {
+// Generate certificate number before validation/save.
+certificateSchema.pre('validate', async function() {
     if (!this.certificateNumber) {
         const count = await mongoose.model('Certificate').countDocuments({});
         this.certificateNumber = `CERT-${new Date().getFullYear()}-${String(count + 1).padStart(6, '0')}`;
     }
-    next();
 });
 
 // Index for faster queries
 certificateSchema.index({ student: 1, course: 1 });
 certificateSchema.index({ status: 1 });
-certificateSchema.index({ certificateNumber: 1 });
 
 const Certificate = mongoose.model('Certificate', certificateSchema);
 export default Certificate;

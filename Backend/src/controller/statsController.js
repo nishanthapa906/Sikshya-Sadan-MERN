@@ -12,9 +12,7 @@ export const getStats = async (req, res) => {
             totalStudents,
             totalCourses,
             totalEnrollments,
-            totalInstructors: await User.countDocuments({ role: 'instructor' }),
-            placementPercentage: 90,
-            yearsOfExperience: "5+"
+            totalInstructors: await User.countDocuments({ role: 'instructor' })
         };
 
         res.status(200).json({ status: 200, success: true, data: stats });

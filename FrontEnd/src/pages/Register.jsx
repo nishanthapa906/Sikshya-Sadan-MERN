@@ -12,6 +12,7 @@ function Register() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [avatar, setAvatar] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleRegister = async (e) => {
@@ -25,8 +26,20 @@ function Register() {
 
     setIsLoading(true);
 
-    // Call register from context
-    const result = await register({ name, email, phone, password, role: "student" });
+    let result;
+    if (avatar) {
+      const data = new FormData();
+      data.append("name", name);
+      data.append("email", email);
+      data.append("phone", phone);
+      data.append("password", password);
+      data.append("role", "student");
+      data.append("avatar", avatar);
+      result = await register(data);
+    } else {
+      // For no-avatar signup, send JSON payload for simpler backend parsing.
+      result = await register({ name, email, phone, password, role: "student" });
+    }
 
     if (result.success) {
       toast.success("Account created! Welcome 🎉");
@@ -70,6 +83,16 @@ function Register() {
               placeholder="98XXXXXXXX"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
+              className="border p-3 rounded-md outline-none focus:border-blue-500"
+            />
+          </div>
+
+          <div className="flex flex-col gap-y-2 text-xl">
+            <label className="font-semibold">Profile Photo (optional)</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setAvatar(e.target.files?.[0] || null)}
               className="border p-3 rounded-md outline-none focus:border-blue-500"
             />
           </div>

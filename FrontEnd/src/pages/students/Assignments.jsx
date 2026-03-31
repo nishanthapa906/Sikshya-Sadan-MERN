@@ -64,7 +64,7 @@ const Assignments = () => {
     };
 
     const getStatusBadge = (assignment) => {
-        if (assignment.submission?.grade !== undefined) {
+        if (assignment.submission?.grade !== null && assignment.submission?.grade !== undefined) {
             return <span className="px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest border border-emerald-100 flex items-center gap-2">
                 <FaStar /> Graded: {assignment.submission.grade}%
             </span>;
@@ -155,7 +155,7 @@ const Assignments = () => {
                                                 {assignment.attachments.map((file, idx) => (
                                                     <a
                                                         key={idx}
-                                                        href={`${UPLOAD_URL}/${file.url}`}
+                                                        href={file.url ? `${UPLOAD_URL}${file.url}` : '#'}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-black uppercase text-primary-600 hover:bg-primary-600 hover:text-white transition-all flex items-center gap-2"
@@ -183,7 +183,7 @@ const Assignments = () => {
                                                 </div>
                                             )}
 
-                                            {assignment.submission.grade !== undefined && (
+                                            {assignment.submission.grade !== null && assignment.submission.grade !== undefined && (
                                                 <div className="pt-4 border-t border-slate-200 mt-4">
                                                     <div className="flex items-center justify-between mb-2">
                                                         <span className="text-xs font-black uppercase text-emerald-600">Final Grade</span>

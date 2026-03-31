@@ -31,16 +31,23 @@ export const register = async (req, res) => {
             email,
             password: hashPassword,
             phone,
-            role: role || 'student'
+            role: role || 'student',
+            avatar: req.file?.filename || 'default-avatar.png'
         });
 
         userRes = await userRes.save();
+        const token = jwt.sign(
+            { id: userRes._id, email: userRes.email, role: userRes.role },
+            JWT_SECRET,
+            { expiresIn: "5d" }
+        );
 
         res.status(201).json({
             status: 201,
             success: true,
             message: 'User Registered Successfully!',
-            user: userRes
+            user: userRes,
+            token
         });
     } catch (error) {
         res.status(500).json({
@@ -153,7 +160,12 @@ export const getMe = async (req, res) => {
 // Update Profile
 export const updateProfile = async (req, res) => {
     try {
-        const user = await User.findByIdAndUpdate(req.user.id, req.body, { new: true });
+        const updates = {};
+        if (req.body.name !== undefined) updates.name = req.body.name;
+        if (req.body.phone !== undefined) updates.phone = req.body.phone;
+        if (req.file?.filename) updates.avatar = req.file.filename;
+
+        const user = await User.findByIdAndUpdate(req.user.id, updates, { returnDocument: 'after' });
         res.status(200).json({
             status: 200,
             success: true,

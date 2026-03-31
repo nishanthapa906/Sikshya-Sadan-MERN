@@ -128,12 +128,12 @@ const Blog = () => {
                                 </button>
                                 {meta?.categories?.map(cat => (
                                     <button
-                                        key={cat._id}
-                                        onClick={() => setSearchParams({ category: cat._id })}
-                                        className={`w-full flex items-center justify-between p-4 rounded-2xl font-bold transition-all ${category === cat._id ? 'bg-primary-900 text-white shadow-lg' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
+                                        key={cat}
+                                        onClick={() => setSearchParams({ category: cat })}
+                                        className={`w-full flex items-center justify-between p-4 rounded-2xl font-bold transition-all ${category === cat ? 'bg-primary-900 text-white shadow-lg' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
                                     >
-                                        <span className="capitalize">{cat._id}</span>
-                                        <span className={`px-2 py-1 rounded-lg text-[10px] ${category === cat._id ? 'bg-white/20' : 'bg-white text-slate-400'}`}>{cat.count}</span>
+                                        <span className="capitalize">{cat}</span>
+                                        <span className={`px-2 py-1 rounded-lg text-[10px] ${category === cat ? 'bg-white/20' : 'bg-white text-slate-400'}`}>Category</span>
                                     </button>
                                 ))}
                             </div>

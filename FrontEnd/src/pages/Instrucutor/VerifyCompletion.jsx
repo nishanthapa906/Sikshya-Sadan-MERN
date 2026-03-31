@@ -11,6 +11,7 @@ const VerifyCompletion = () => {
     const [courses, setCourses] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [actionLoading, setActionLoading] = useState(null);
+    const [certificateFiles, setCertificateFiles] = useState({});
 
     useEffect(() => {
         fetchData();
@@ -66,6 +67,33 @@ const VerifyCompletion = () => {
             alert('Completion revoked. Student status set back to Active.');
         } catch (error) {
             alert(error.response?.data?.message || 'Failed to revoke completion');
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const handleUploadCertificate = async (enrollmentId) => {
+        const file = certificateFiles[enrollmentId];
+        if (!file) {
+            alert('Please choose a certificate image first.');
+            return;
+        }
+
+        try {
+            setActionLoading(`upload-${enrollmentId}`);
+            const formData = new FormData();
+            formData.append('certificateImage', file);
+            await instructorAPI.uploadCertificate(enrollmentId, formData);
+
+            alert('Certificate uploaded and issued successfully.');
+            await fetchData();
+            setCertificateFiles((prev) => {
+                const next = { ...prev };
+                delete next[enrollmentId];
+                return next;
+            });
+        } catch (error) {
+            alert(error.response?.data?.message || 'Failed to upload certificate.');
         } finally {
             setActionLoading(null);
         }
@@ -183,6 +211,7 @@ const VerifyCompletion = () => {
                             const attendancePct = getAttendancePercent(enrollment);
                             const totalClasses = enrollment.attendance?.length || 0;
                             const isLoading = actionLoading === enrollment._id;
+                            const isUploading = actionLoading === `upload-${enrollment._id}`;
 
                             return (
                                 <div key={enrollment._id} className={`bg-white p-8 rounded-[3rem] shadow-lg border-2 transition-all flex flex-col md:flex-row items-center justify-between gap-8 ${isCompleted ? 'border-emerald-100 bg-emerald-50/20' : 'border-slate-50 hover:border-primary-100'}`}>
@@ -250,6 +279,35 @@ const VerifyCompletion = () => {
                                                             {isLoading ? <FaSpinner className="animate-spin" /> : 'Revoke'}
                                                         </button>
                                                     )}
+
+                                                    <div className="mt-2 flex flex-col items-center gap-2">
+                                                        <input
+                                                            type="file"
+                                                            accept="image/*"
+                                                            onChange={(e) => {
+                                                                const file = e.target.files?.[0] || null;
+                                                                setCertificateFiles((prev) => ({ ...prev, [enrollment._id]: file }));
+                                                            }}
+                                                            className="text-[10px] font-bold w-56"
+                                                        />
+                                                        <button
+                                                            onClick={() => handleUploadCertificate(enrollment._id)}
+                                                            disabled={isUploading || !certificateFiles[enrollment._id]}
+                                                            className="px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest bg-indigo-600 text-white hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        >
+                                                            {isUploading ? <FaSpinner className="animate-spin" /> : (isCertIssued ? 'Replace Certificate' : 'Upload Certificate')}
+                                                        </button>
+                                                        {enrollment.certificateUrl && (
+                                                            <a
+                                                                href={`${UPLOAD_URL}/${enrollment.certificateUrl}`}
+                                                                target="_blank"
+                                                                rel="noreferrer"
+                                                                className="text-[10px] font-bold text-indigo-600 underline"
+                                                            >
+                                                                View Uploaded Certificate
+                                                            </a>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             ) : (
                                                 <button

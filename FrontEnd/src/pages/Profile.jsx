@@ -27,7 +27,7 @@ function Profile() {
 
     try {
       const formData = new FormData();
-      formData.append("photo", file);
+      formData.append("avatar", file);
 
       const res = await authAPI.updateProfile(formData);
       if (res.data?.user) updateUser(res.data.user);
@@ -65,7 +65,7 @@ function Profile() {
   };
 
   // Show preview or existing photo or first letter
-  const avatarSrc = preview || (user?.photo ? `${UPLOAD_URL}/${user.photo}` : null);
+  const avatarSrc = preview || (user?.avatar ? `${UPLOAD_URL}/${user.avatar}` : null);
 
   return (
     <div className="min-h-screen bg-gray-50 pt-24 pb-16">

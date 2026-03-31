@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { adminAPI } from '../../services/api';
-import { FaUserGraduate, FaChalkboardTeacher, FaBook, FaClipboardList, FaWallet, FaUsersCog, FaChartLine, FaBriefcase, FaArrowRight } from 'react-icons/fa';
+import { FaUserGraduate, FaChalkboardTeacher, FaBook, FaClipboardList, FaWallet, FaUsersCog, FaChartLine, FaBriefcase, FaArrowRight, FaCommentDots } from 'react-icons/fa';
 
 const AdminDashboard = () => {
     const [stats, setStats] = useState({
@@ -119,7 +119,7 @@ const AdminDashboard = () => {
                 {/* Management Links */}
                 <div className="pt-4">
                     <h2 className="text-2xl font-bold text-slate-900 mb-8">Management Tools</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                         
                         <Link to="/admin/users" className="bg-white rounded-[2rem] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 hover:border-slate-300 hover:shadow-lg transition-all group flex flex-col h-full">
                             <div className="flex justify-between items-start mb-6">
@@ -171,6 +171,19 @@ const AdminDashboard = () => {
                             </div>
                             <h3 className="text-xl font-bold text-slate-900 mb-2">Job Listings</h3>
                             <p className="text-sm text-slate-500 font-medium leading-relaxed mt-auto">Post and manage placement opportunities.</p>
+                        </Link>
+
+                        <Link to="/admin/testimonials" className="bg-white rounded-[2rem] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 hover:border-amber-300 hover:shadow-lg transition-all group flex flex-col h-full">
+                            <div className="flex justify-between items-start mb-6">
+                                <div className="h-14 w-14 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-colors">
+                                    <FaCommentDots size={24} />
+                                </div>
+                                <div className="h-10 w-10 rounded-full border border-slate-100 flex items-center justify-center text-slate-300 group-hover:border-amber-300 group-hover:text-amber-600 transition-colors">
+                                    <FaArrowRight size={14} />
+                                </div>
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-900 mb-2">Testimonials</h3>
+                            <p className="text-sm text-slate-500 font-medium leading-relaxed mt-auto">Add and manage homepage student reviews.</p>
                         </Link>
 
                     </div>

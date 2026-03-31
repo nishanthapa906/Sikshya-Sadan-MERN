@@ -4,7 +4,20 @@ import { authAPI } from "../services/api";
 const AuthContext = createContext();
 
 export const useAuth = () => {
-  return useContext(AuthContext);
+  return (
+    useContext(AuthContext) || {
+      user: null,
+      isLoading: false,
+      login: async () => ({ success: false, message: "Auth context unavailable" }),
+      register: async () => ({ success: false, message: "Auth context unavailable" }),
+      logout: () => {},
+      updateUser: () => {},
+      isAuthenticated: false,
+      isStudent: false,
+      isInstructor: false,
+      isAdmin: false,
+    }
+  );
 };
 
 export const AuthProvider = ({ children }) => {
@@ -62,9 +75,13 @@ export const AuthProvider = ({ children }) => {
       setUser(user);
       return { success: true, user };
     } catch (error) {
+      const backendErrors = error.response?.data?.errors;
+      const detailedMessage = Array.isArray(backendErrors) && backendErrors.length > 0
+        ? backendErrors.map((e) => e.msg || e.message).join(", ")
+        : (error.response?.data?.message || error.response?.data?.error || "Registration failed");
       return {
         success: false,
-        message: error.response?.data?.message || "Registration failed",
+        message: detailedMessage,
       };
     }
   };

@@ -48,7 +48,10 @@ export const createEnrollement = async(req, res) =>{
 
 export const getMyEnrollments = async(req, res)=>{
     try {
-        const enrollments = await Enrollment.find({student: req.user.id}).populate('course');
+        const enrollments = await Enrollment.find({
+            student: req.user.id,
+            paymentStatus: { $in: ['completed', 'installment'] }
+        }).populate('course');
         res.status(200).json({
            status: 200,
             success: true,
@@ -85,7 +88,7 @@ export const getEnrollmentDetails = async (req, res) => {
 // Update Progress
 export const updateProgress = async (req, res) => {
     try {
-        const enrollment = await Enrollment.findByIdAndUpdate(req.params.enrollmentId, { progress: req.body.progress }, { new: true });
+        const enrollment = await Enrollment.findByIdAndUpdate(req.params.enrollmentId, { progress: req.body.progress }, { returnDocument: 'after' });
         res.status(200).json({
             status: 200,
             success: true,

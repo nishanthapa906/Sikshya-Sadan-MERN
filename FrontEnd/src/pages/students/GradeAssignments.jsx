@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
 import { instructorAPI, UPLOAD_URL } from '../../services/api';
-import { FaGraduationCap, FaCheckCircle, FaExclamationCircle, FaUser, FaClock, FaStar, FaChevronRight, FaFileAlt } from 'react-icons/fa';
+import { FaGraduationCap, FaCheckCircle, FaUser, FaClock, FaStar, FaChevronRight, FaFileAlt } from 'react-icons/fa';
 
 
 const GradeAssignments = () => {
-    const { user } = useAuth();
     const [courses, setCourses] = useState([]);
     const [selectedCourse, setSelectedCourse] = useState('');
     const [assignments, setAssignments] = useState([]);
@@ -41,7 +39,7 @@ const GradeAssignments = () => {
     const fetchAssignments = async () => {
         try {
             const response = await instructorAPI.getCourseAssignments(selectedCourse);
-            setAssignments(response.data.assignments || []);
+            setAssignments(response.data.data || response.data.assignments || []);
         } catch (err) {
             console.error('Failed to load assignments:', err);
         }
@@ -50,14 +48,14 @@ const GradeAssignments = () => {
     const fetchSubmissions = async (assignmentId) => {
         try {
             const response = await instructorAPI.getAssignmentSubmissions(assignmentId);
-            setSubmissions(response.data.submissions || []);
+            setSubmissions(response.data.data || response.data.submissions || []);
         } catch (err) {
             console.error('Failed to load submissions:', err);
         }
     };
 
     const handleGradeSubmission = async () => {
-        if (!grade || grade < 0 || grade > 100) {
+        if (grade === '' || Number(grade) < 0 || Number(grade) > 100) {
             alert('Please enter a valid grade (0-100)');
             return;
         }
@@ -65,7 +63,7 @@ const GradeAssignments = () => {
         try {
             setGrading(true);
             await instructorAPI.gradeSubmission(selectedSubmission._id, {
-                marks: parseFloat(grade),
+                grade: parseFloat(grade),
                 feedback: feedback.trim()
             });
 
@@ -100,17 +98,17 @@ const GradeAssignments = () => {
     }
 
     return (
-        <div className="instructor-portal min-h-screen bg-slate-50 pt-24 pb-24">
-            <div className="container mx-auto px-6">
+        <div className="instructor-portal min-h-screen bg-slate-50 pt-24 pb-16">
+            <div className="container mx-auto px-4 sm:px-6">
                 <div className="portal-header mb-12">
                     <span className="text-primary-600 font-black uppercase text-xs tracking-widest bg-primary-50 px-5 py-2 rounded-full mb-4 inline-block italic">Evaluation Center</span>
-                    <h1 className="text-5xl font-black text-slate-900 italic">Grade Submissions</h1>
-                    <p className="text-slate-500 font-medium">Evaluate student performance and provide constructive feedback.</p>
+                    <h1 className="text-3xl sm:text-5xl font-black text-slate-900 italic">Grade Submissions</h1>
+                    <p className="text-slate-500 font-medium text-sm sm:text-base">Evaluate student performance and provide constructive feedback.</p>
                 </div>
 
                 <div className="grading-container">
                     {/* Course Selection */}
-                    <div className="card shadow-xl border-2 border-primary-50 bg-white mb-12 rounded-[3rem] p-8">
+                    <div className="card shadow-xl border-2 border-primary-50 bg-white mb-10 rounded-3xl p-5 sm:p-8">
                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4 mb-2 block">Choose Track to Evaluate</label>
                         <select
                             className="w-full bg-slate-50 border-0 rounded-2xl px-6 py-4 focus:ring-4 ring-primary-100 outline-none font-bold text-slate-800 transition-all appearance-none italic"
@@ -138,10 +136,10 @@ const GradeAssignments = () => {
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
                                     {assignments.map((assignment) => (
-                                        <div key={assignment._id} className="bg-white p-10 rounded-[3rem] shadow-xl border border-slate-100 hover:border-primary-100 transition-all">
-                                            <h4 className="text-2xl font-black text-slate-900 mb-2 italic tracking-tight">{assignment.title}</h4>
+                                        <div key={assignment._id} className="bg-white p-6 sm:p-10 rounded-3xl shadow-xl border border-slate-100 hover:border-primary-100 transition-all">
+                                            <h4 className="text-xl sm:text-2xl font-black text-slate-900 mb-2 italic tracking-tight">{assignment.title}</h4>
                                             <p className="text-sm font-bold text-slate-400 mb-4">{assignment.description}</p>
-                                            <div className="flex items-center gap-6 text-[10px] font-black uppercase tracking-widest text-slate-500 mb-6 bg-slate-50 px-5 py-3 rounded-2xl w-fit">
+                                            <div className="flex flex-wrap items-center gap-4 text-[10px] font-black uppercase tracking-widest text-slate-500 mb-6 bg-slate-50 px-5 py-3 rounded-2xl">
                                                 <span className="flex items-center gap-2"><FaClock className="text-primary-500" /> {formatDate(assignment.dueDate)}</span>
                                                 <span className="flex items-center gap-2"><FaStar className="text-amber-500" /> {assignment.maxMarks || 100} Pts</span>
                                             </div>
@@ -149,7 +147,7 @@ const GradeAssignments = () => {
                                                 className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-primary-600 transition-all active:scale-95 shadow-lg"
                                                 onClick={() => fetchSubmissions(assignment._id)}
                                             >
-                                                Inspect Submissions ({assignment.submissionCount || 0}) <FaChevronRight />
+                                                Inspect Submissions ({assignment.stats?.totalSubmissions || 0}) <FaChevronRight />
                                             </button>
                                         </div>
                                     ))}
@@ -165,7 +163,7 @@ const GradeAssignments = () => {
                             </h3>
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 {submissions.map((submission) => (
-                                    <div key={submission._id} className="bg-white p-10 rounded-[3.5rem] shadow-2xl border border-slate-100 relative group overflow-hidden">
+                                    <div key={submission._id} className="bg-white p-6 sm:p-10 rounded-3xl shadow-2xl border border-slate-100 relative group overflow-hidden">
                                         <div className="absolute top-0 right-0 p-8 opacity-5 -mr-4 -mt-4">
                                             <FaUser size={80} />
                                         </div>
@@ -174,7 +172,7 @@ const GradeAssignments = () => {
                                                 <h4 className="text-xl font-black text-slate-900 italic tracking-tight">{submission.student?.name || 'Candidate'}</h4>
                                                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">Submitted {formatDate(submission.submittedAt)}</p>
                                             </div>
-                                            {submission.grade !== undefined ? (
+                                            {submission.grade !== null && submission.grade !== undefined ? (
                                                 <span className="px-5 py-2 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest border border-emerald-100 flex items-center gap-2">
                                                     <FaCheckCircle /> Scored: {submission.grade}%
                                                 </span>
@@ -189,18 +187,18 @@ const GradeAssignments = () => {
                                             </div>
                                         )}
 
-                                        {submission.fileUrl && (
+                                        {submission.submissionFile?.url && (
                                             <a
-                                                href={`${UPLOAD_URL}/${submission.fileUrl}`}
+                                                href={`${UPLOAD_URL}${submission.submissionFile.url}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="inline-flex items-center gap-3 px-6 py-3 bg-white border-2 border-slate-900 text-slate-900 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-900 hover:text-white transition-all mb-6 active:scale-95"
                                             >
-                                                <FaFileAlt /> Open Attachments
+                                                <FaFileAlt /> Open Submission (New Tab)
                                             </a>
                                         )}
 
-                                        {submission.grade !== undefined && submission.feedback && (
+                                        {submission.grade !== null && submission.grade !== undefined && submission.feedback && (
                                             <div className="pt-6 border-t border-slate-100 mt-4 mb-6">
                                                 <h5 className="text-[10px] font-black uppercase tracking-widest text-primary-600 mb-2">Previous Feedback</h5>
                                                 <p className="text-sm font-medium text-slate-500 italic">"{submission.feedback}"</p>
@@ -208,7 +206,7 @@ const GradeAssignments = () => {
                                         )}
 
                                         {selectedSubmission?._id === submission._id ? (
-                                            <div className="bg-primary-50 p-8 rounded-[2.5rem] border border-primary-100 space-y-6 animate-fadeIn">
+                                            <div className="bg-primary-50 p-5 sm:p-8 rounded-3xl border border-primary-100 space-y-6 animate-fadeIn">
                                                 <div className="grid grid-cols-1 gap-6">
                                                     <div className="space-y-2">
                                                         <label className="text-[10px] font-black uppercase tracking-widest text-primary-400 ml-4">Evaluation Score (0-100)</label>
@@ -232,7 +230,7 @@ const GradeAssignments = () => {
                                                         />
                                                     </div>
                                                 </div>
-                                                <div className="flex gap-4">
+                                                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                                                     <button
                                                         className="flex-grow py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-primary-600 transition-all shadow-xl"
                                                         onClick={handleGradeSubmission}
@@ -257,11 +255,11 @@ const GradeAssignments = () => {
                                                 className="w-full py-5 bg-primary-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-primary-200 hover:bg-primary-900 transition-all active:scale-95"
                                                 onClick={() => {
                                                     setSelectedSubmission(submission);
-                                                    setGrade(submission.grade?.toString() || '');
+                                                    setGrade(submission.grade !== null && submission.grade !== undefined ? submission.grade.toString() : '');
                                                     setFeedback(submission.feedback || '');
                                                 }}
                                             >
-                                                {submission.grade !== undefined ? 'Update Scorecard' : 'Start Evaluation'}
+                                                {submission.grade !== null && submission.grade !== undefined ? 'Update Scorecard' : 'Start Evaluation'}
                                             </button>
                                         )}
                                     </div>

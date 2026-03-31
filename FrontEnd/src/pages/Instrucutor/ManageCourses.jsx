@@ -32,6 +32,16 @@ const ManageCourses = () => {
         { week: 1, topic: '', description: '' }
     ]);
 
+    const toInputDate = (value) => {
+        if (!value) return '';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return '';
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
     useEffect(() => {
         fetchMyCourses();
     }, []);
@@ -100,7 +110,7 @@ const ManageCourses = () => {
             duration: course.duration || '',
             fee: course.fee || '',
             description: course.description || '',
-            startDate: course.startDate ? new Date(course.startDate).toISOString().split('T')[0] : '',
+            startDate: toInputDate(course.startDate),
             installmentAvailable: course.installmentAvailable || false,
             prerequisites: Array.isArray(course.prerequisites) ? course.prerequisites.join(', ') : (course.prerequisites || '')
         });
@@ -118,10 +128,24 @@ const ManageCourses = () => {
             return;
         }
 
+        const parsedStartDate = new Date(newCourse.startDate);
+        if (Number.isNaN(parsedStartDate.getTime())) {
+            alert('Please select a valid start date');
+            return;
+        }
+
         try {
             const formData = new FormData();
             // Append basic fields
             Object.keys(newCourse).forEach(key => {
+                if (key === 'prerequisites') {
+                    const prerequisites = newCourse.prerequisites
+                        .split(',')
+                        .map((item) => item.trim())
+                        .filter(Boolean);
+                    formData.append(key, JSON.stringify(prerequisites));
+                    return;
+                }
                 formData.append(key, newCourse[key]);
             });
 
@@ -161,6 +185,7 @@ const ManageCourses = () => {
                 });
                 setSyllabus([{ week: 1, topic: '', description: '' }]);
                 setThumbnail(null);
+                setSyllabusFile(null);
                 setPreviewUrl(null);
                 fetchMyCourses();
             }

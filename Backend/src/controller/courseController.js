@@ -4,6 +4,37 @@
 
 import Course from "../models/courseModel.js";
 
+const normalizeCoursePayload = (body) => {
+    if (typeof body.syllabus === 'string') {
+        try { body.syllabus = JSON.parse(body.syllabus); } catch (e) { }
+    }
+
+    if (typeof body.prerequisites === 'string') {
+        try {
+            body.prerequisites = JSON.parse(body.prerequisites);
+        } catch (e) {
+            body.prerequisites = body.prerequisites
+                .split(',')
+                .map((item) => item.trim())
+                .filter(Boolean);
+        }
+    }
+
+    if (typeof body.installmentPlans === 'string') {
+        try { body.installmentPlans = JSON.parse(body.installmentPlans); } catch (e) { }
+    }
+
+    if (body.installmentAvailable === 'true') body.installmentAvailable = true;
+    if (body.installmentAvailable === 'false') body.installmentAvailable = false;
+
+    if (typeof body.startDate === 'string' && body.startDate) {
+        const date = new Date(body.startDate);
+        if (!Number.isNaN(date.getTime())) {
+            body.startDate = date;
+        }
+    }
+};
+
 export const getAllCourses = async (req, res) =>{
     try{
         const {search, category , skillLevel,sort, limit } = req.query ;
@@ -78,19 +109,7 @@ export const getCourseById = async (req, res) =>{
 export const  createCourse = async (req, res) => {
     try{
         req.body.instructor = req.user.id;
-         // Simple parsing
-        if (typeof req.body.syllabus === 'string') {
-            try { req.body.syllabus = JSON.parse(req.body.syllabus); } catch (e) { }
-        }
-        if (typeof req.body.prerequisites === 'string') {
-            try { req.body.prerequisites = JSON.parse(req.body.prerequisites); } catch (e) { }
-        }
-        if (typeof req.body.installmentPlans === 'string') {
-            try { req.body.installmentPlans = JSON.parse(req.body.installmentPlans); } catch (e) { }
-        }
-
-        if (req.body.installmentAvailable === 'true') req.body.installmentAvailable = true;
-        if (req.body.installmentAvailable === 'false') req.body.installmentAvailable = false;
+        normalizeCoursePayload(req.body);
 
         if (req.files) {
             if (req.files.thumbnail) req.body.thumbnail = req.files.thumbnail[0].filename;
@@ -116,25 +135,14 @@ export const  createCourse = async (req, res) => {
 
 export const updateCourse = async (req, res)=>{
      try {
-        if (typeof req.body.syllabus === 'string') {
-            try { req.body.syllabus = JSON.parse(req.body.syllabus); } catch (e) { }
-        }
-        if (typeof req.body.prerequisites === 'string') {
-            try { req.body.prerequisites = JSON.parse(req.body.prerequisites); } catch (e) { }
-        }
-        if (typeof req.body.installmentPlans === 'string') {
-            try { req.body.installmentPlans = JSON.parse(req.body.installmentPlans); } catch (e) { }
-        }
-
-        if (req.body.installmentAvailable === 'true') req.body.installmentAvailable = true;
-        if (req.body.installmentAvailable === 'false') req.body.installmentAvailable = false;
+        normalizeCoursePayload(req.body);
 
         if (req.files) {
             if (req.files.thumbnail) req.body.thumbnail = req.files.thumbnail[0].filename;
             if (req.files.syllabusFile) req.body.syllabusFile = req.files.syllabusFile[0].filename;
         }
 
-        const course = await Course.findByIdAndUpdate(req.params.id, req.body, {new: true});;
+        const course = await Course.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' });
          res.status(200).json({
             status: 200, 
             success: true, 

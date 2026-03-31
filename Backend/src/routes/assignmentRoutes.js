@@ -21,7 +21,7 @@ router.get('/student/certificates', protect, authorize('student'), getMyCertific
 router.post('/student/:courseId/claim-certificate', protect, authorize('student'), claimCertificate);
 
 // Instructor routes (protected)
-router.post('/instructor/courses/:courseId/assignments', protect, authorize('instructor', 'admin'), assignmentValidation, validate, upload.array('attachments', 5), createAssignment);
+router.post('/instructor/courses/:courseId/assignments', protect, authorize('instructor', 'admin'), upload.array('attachments', 5), assignmentValidation, validate, createAssignment);
 router.get('/instructor/courses/:courseId/assignments', protect, authorize('instructor', 'admin'), getCourseAssignments);
 router.get('/instructor/assignments/:assignmentId/submissions', protect, authorize('instructor', 'admin'), getAssignmentSubmissions);
 router.put('/instructor/submissions/:submissionId/grade', protect, authorize('instructor', 'admin'), gradeSubmission);

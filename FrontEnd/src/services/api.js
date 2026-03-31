@@ -64,6 +64,7 @@ export const courseAPI = {
 export const studentAPI = {
     getDashboard: () => api.get('/student/dashboard'),
     getMyCourses: () => api.get('/student/my-courses'),
+    getMyAttendance: (courseId) => api.get(`/student/attendance/${courseId}`),
     getMyAssignments: () => api.get('/assignments/student/assignments'),
     submitAssignment: (assignmentId, data) => api.post(`/assignments/student/assignments/${assignmentId}/submit`, data),
     getMyCertificates: () => api.get('/assignments/student/certificates'),
@@ -86,7 +87,8 @@ export const instructorAPI = {
     getCourseResources: (courseId) => api.get(`/instructor/courses/${courseId}/resources`),
     deleteResource: (resourceId) => api.delete(`/instructor/resources/${resourceId}`),
     updateEnrollment: (enrollmentId, data) => api.put(`/instructor/enrollments/${enrollmentId}`, data),
-    markAttendance: (enrollmentId, data) => api.post(`/instructor/enrollments/${enrollmentId}/attendance`, data)
+    markAttendance: (enrollmentId, data) => api.post(`/instructor/enrollments/${enrollmentId}/attendance`, data),
+    uploadCertificate: (enrollmentId, data) => api.post(`/instructor/enrollments/${enrollmentId}/certificate`, data)
 };
 
 // Admin API calls
@@ -99,7 +101,11 @@ export const adminAPI = {
     updateUser: (id, data) => api.put(`/admin/users/${id}`, data),
     updateUserRole: (id, role) => api.put(`/admin/users/${id}/role`, { role }),
     deleteUser: (id) => api.delete(`/admin/users/${id}`),
-    updateEnrollmentStatus: (id, paymentStatus) => api.put(`/admin/enrollments/${id}/status`, { paymentStatus })
+    updateEnrollmentStatus: (id, paymentStatus) => api.put(`/admin/enrollments/${id}/status`, { paymentStatus }),
+    getTestimonials: () => api.get('/public/testimonials'),
+    createTestimonial: (data) => api.post('/public/testimonials', data),
+    updateTestimonial: (id, data) => api.put(`/public/testimonials/${id}`, data),
+    deleteTestimonial: (id) => api.delete(`/public/testimonials/${id}`)
 };
 
 // Enrollment API calls

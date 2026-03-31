@@ -12,7 +12,8 @@ import {
     getCourseResources,
     deleteResource,
     markAttendance,
-    updateEnrollment
+    updateEnrollment,
+    uploadCertificate
 } from '../controller/instructorController.js';
 import { protect, authorize } from '../middleware/auth.js';
 import upload from '../middleware/upload.js';
@@ -33,5 +34,6 @@ router.get('/courses/:courseId/resources', getCourseResources);
 router.delete('/resources/:resourceId', deleteResource);
 router.post('/enrollments/:enrollmentId/attendance', markAttendance);
 router.put('/enrollments/:id', updateEnrollment);
+router.post('/enrollments/:enrollmentId/certificate', upload.single('certificateImage'), uploadCertificate);
 
 export default router;

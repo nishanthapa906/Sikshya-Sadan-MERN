@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { instructorAPI } from '../../services/api';
-import { FaChalkboardTeacher, FaUsers, FaClipboardList, FaPlus, FaFileUpload, FaCheckSquare, FaBook, FaArrowRight } from 'react-icons/fa';
+import { FaUsers, FaClipboardList, FaPlus, FaFileUpload, FaCheckSquare, FaBook, FaEdit, FaGraduationCap } from 'react-icons/fa';
 
 const InstructorDashboard = () => {
     const [stats, setStats] = useState({
@@ -151,6 +151,26 @@ const InstructorDashboard = () => {
                                     </div>
                                     <h3 className="text-lg font-bold text-slate-900 mb-1">Upload Resources</h3>
                                     <p className="text-sm text-slate-500 font-medium">Share files and study materials.</p>
+                                </Link>
+
+                                <Link to="/instructor/blogs" className="bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 hover:border-indigo-300 hover:shadow-lg transition-all group">
+                                    <div className="flex justify-between items-start mb-6">
+                                        <div className="h-14 w-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                                            <FaEdit size={20} />
+                                        </div>
+                                    </div>
+                                    <h3 className="text-lg font-bold text-slate-900 mb-1">Write Blogs</h3>
+                                    <p className="text-sm text-slate-500 font-medium">Create and manage your published articles.</p>
+                                </Link>
+
+                                <Link to="/instructor/verify-completion" className="bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 hover:border-emerald-300 hover:shadow-lg transition-all group">
+                                    <div className="flex justify-between items-start mb-6">
+                                        <div className="h-14 w-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                                            <FaGraduationCap size={20} />
+                                        </div>
+                                    </div>
+                                    <h3 className="text-lg font-bold text-slate-900 mb-1">Verify Completion</h3>
+                                    <p className="text-sm text-slate-500 font-medium">Mark students complete and upload certificates.</p>
                                 </Link>
                             </div>
                         </div>

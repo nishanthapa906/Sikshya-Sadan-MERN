@@ -220,62 +220,29 @@ export const claimCertificate = async (req, res) => {
             });
         }
 
-        // Check if certificate already exists
         let certificate = await Certificate.findOne({
             student: studentId,
             course: courseId
         });
 
-        if (certificate) {
-            if (certificate.claimStatus === 'claimed') {
-                return res.status(400).json({
-                    status: 400,
-                    success: false,
-                    message: 'Certificate already claimed. Please visit office to grab it.'
-                });
-            }
-            // Update claim status
-            certificate.claimStatus = 'pending-claim';
-            certificate.claimDate = new Date();
-        } else {
-            // Create new certificate
-            const course = await Course.findById(courseId).populate('instructor', 'name');
-
-            // Calculate final grade from submissions
-            const submissions = await Submission.find({
-                student: studentId,
-                course: courseId
-            });
-
-            const gradedSubmissions = submissions.filter(s => s.grade !== null && s.grade !== undefined);
-            let finalGrade = 0;
-            if (gradedSubmissions.length > 0) {
-                finalGrade = Math.round(
-                    gradedSubmissions.reduce((sum, s) => sum + s.grade, 0) / gradedSubmissions.length
-                );
-            }
-
-            certificate = new Certificate({
-                student: studentId,
-                course: courseId,
-                completionDate: new Date(),
-                issuedDate: new Date(),
-                status: 'available',
-                claimStatus: 'pending-claim',
-                claimDate: new Date(),
-                finalGrade,
-                totalScore: finalGrade,
-                submissionDetails: {
-                    totalAssignments: submissions.length,
-                    completedAssignments: submissions.length,
-                    assignmentScores: gradedSubmissions.map(s => s.grade)
-                },
-                courseDetails: {
-                    duration: course?.duration || 'Self-paced',
-                    instructor: course?.instructor?.name || 'Instructor'
-                }
+        if (!certificate || !certificate.certificateImage || !['issued', 'available', 'claimed'].includes(certificate.status)) {
+            return res.status(400).json({
+                status: 400,
+                success: false,
+                message: 'Certificate is not issued yet. Please wait for your instructor to upload it.'
             });
         }
+
+        if (certificate.claimStatus === 'claimed') {
+            return res.status(400).json({
+                status: 400,
+                success: false,
+                message: 'Certificate already claimed. Please visit office to grab it.'
+            });
+        }
+
+        certificate.claimStatus = 'pending-claim';
+        certificate.claimDate = new Date();
 
         await certificate.save();
 

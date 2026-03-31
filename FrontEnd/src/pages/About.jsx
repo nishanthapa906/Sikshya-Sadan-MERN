@@ -41,7 +41,7 @@ const About = () => {
                 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center opacity-20"></div>
                 <div className="container mx-auto px-6 relative z-10 text-center">
                     <span className="text-primary-400 font-black uppercase tracking-widest text-sm mb-6 inline-block">Since {settings?.foundedYear}</span>
-                    <h1 className="text-5xl md:text-7xl font-black mb-8 italic">Empowering Nepal's <br /> IT Ecosystem</h1>
+                    <h1 className="text-5xl md:text-7xl font-white mb-8 italic">Empowering Nepal's <br /> IT Ecosystem</h1>
                     <p className="max-w-3xl mx-auto text-xl text-slate-300 font-light leading-relaxed">
                         Sikshya Sadan is more than a training institute. We are a community of innovators, builders, and dreamers dedicated to bridging the talent gap in Nepal's tech industry.
                     </p>

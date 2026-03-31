@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { jobAPI, UPLOAD_URL } from '../../services/api';
+import { jobAPI } from '../../services/api';
 import { FaPlus, FaTrash, FaEdit, FaBriefcase, FaBuilding, FaMapMarkerAlt, FaCalendarAlt, FaLink, FaTimes } from 'react-icons/fa';
 
 const JobsManagement = () => {
@@ -8,7 +8,6 @@ const JobsManagement = () => {
     const [showForm, setShowForm] = useState(false);
     const [editing, setEditing] = useState(null);
     const [processing, setProcessing] = useState(false);
-    const [logoFile, setLogoFile] = useState(null);
 
     const emptyForm = {
         title: '', company: '', location: '', type: 'Full-time',
@@ -23,7 +22,7 @@ const JobsManagement = () => {
         try {
             setLoading(true);
             const res = await jobAPI.getAll();
-            setJobs(res.data.data.jobs || []);
+            setJobs(res.data.data || []);
         } catch (err) {
             console.error(err);
         } finally {
@@ -41,7 +40,6 @@ const JobsManagement = () => {
             deadline: job.deadline ? new Date(job.deadline).toISOString().split('T')[0] : '',
             isActive: job.isActive
         });
-        setLogoFile(null);
         setShowForm(true);
     };
 
@@ -49,28 +47,21 @@ const JobsManagement = () => {
         e.preventDefault();
         try {
             setProcessing(true);
-            const fd = new FormData();
-            Object.keys(form).forEach(key => {
-                if (key === 'requirements') {
-                    const arr = form.requirements.split(',').map(r => r.trim()).filter(Boolean);
-                    arr.forEach(r => fd.append('requirements', r));
-                } else {
-                    fd.append(key, form[key]);
-                }
-            });
-            if (logoFile) fd.append('companyLogo', logoFile);
+            const payload = {
+                ...form,
+                requirements: form.requirements.split(',').map(r => r.trim()).filter(Boolean)
+            };
 
             if (editing) {
-                await jobAPI.update(editing, fd);
+                await jobAPI.update(editing, payload);
                 alert('Job updated!');
             } else {
-                await jobAPI.create(fd);
+                await jobAPI.create(payload);
                 alert('Job posted!');
             }
             setShowForm(false);
             setEditing(null);
             setForm(emptyForm);
-            setLogoFile(null);
             fetchJobs();
         } catch (err) {
             alert(err.response?.data?.message || 'Failed to save job');
@@ -107,7 +98,7 @@ const JobsManagement = () => {
                         <p className="text-slate-500 mt-2">Post and manage IT job opportunities for graduates.</p>
                     </div>
                     <button
-                        onClick={() => { setShowForm(true); setEditing(null); setForm(emptyForm); setLogoFile(null); }}
+                        onClick={() => { setShowForm(true); setEditing(null); setForm(emptyForm); }}
                         className="flex items-center gap-3 px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-xl active:scale-95"
                     >
                         <FaPlus /> Post New Job
@@ -189,20 +180,8 @@ const JobsManagement = () => {
 
                             <div className="grid md:grid-cols-2 gap-8 items-end">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Company Logo (optional)</label>
-                                    <div className="relative border-2 border-dashed border-slate-200 rounded-2xl p-6 bg-slate-50 hover:border-blue-300 transition-all cursor-pointer">
-                                        <div className="flex items-center gap-4">
-                                            <FaBuilding className="text-slate-300 text-2xl" />
-                                            <div>
-                                                <p className="font-bold text-slate-700 text-sm truncate">
-                                                    {logoFile ? logoFile.name : 'Upload company logo'}
-                                                </p>
-                                                <p className="text-[10px] text-slate-400">PNG, JPG (optional)</p>
-                                            </div>
-                                        </div>
-                                        <input type="file" accept="image/*" onChange={e => setLogoFile(e.target.files[0])}
-                                            className="absolute inset-0 opacity-0 cursor-pointer" />
-                                    </div>
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Company Name</label>
+                                    <p className="text-sm text-slate-500 bg-slate-50 rounded-2xl px-6 py-4">Logo upload is optional and can be added later.</p>
                                 </div>
                                 <div className="flex items-center gap-4 pb-2">
                                     <label className="flex items-center gap-3 cursor-pointer">
@@ -234,9 +213,7 @@ const JobsManagement = () => {
                         jobs.map(job => (
                             <div key={job._id} className="bg-white rounded-[2.5rem] border border-slate-100 shadow-lg p-8 flex flex-col md:flex-row md:items-center gap-8 group hover:shadow-xl transition-all">
                                 <div className="h-16 w-16 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100 flex-shrink-0">
-                                    {job.companyLogo ? (
-                                        <img src={`${UPLOAD_URL}/${job.companyLogo}`} alt={job.company} className="h-12 w-12 object-contain" />
-                                    ) : <FaBuilding size={24} className="text-slate-300" />}
+                                    <FaBuilding size={24} className="text-slate-300" />
                                 </div>
                                 <div className="flex-grow">
                                     <div className="flex flex-wrap gap-2 mb-2">

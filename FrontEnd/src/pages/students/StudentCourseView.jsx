@@ -13,6 +13,13 @@ const StudentCourseView = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("syllabus");
 
+  const formatSafeDate = (value) => {
+    if (!value) return "N/A";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "N/A";
+    return date.toLocaleDateString();
+  };
+
   // Fetch course and attendance data
   useEffect(() => {
     const fetchData = async () => {
@@ -23,7 +30,21 @@ const StudentCourseView = () => {
         ]);
 
         setCourse(courseRes.data.course);
-        setAttendanceData(attendanceRes?.data?.data || null);
+        const attendanceList = attendanceRes?.data?.data || [];
+        const summary = attendanceRes?.data?.summary || {};
+        const totalClasses = summary.total ?? attendanceList.length;
+        const presentClasses = summary.present ?? 0;
+        const attendancePercentage = totalClasses > 0
+          ? Math.round((presentClasses / totalClasses) * 100)
+          : 0;
+
+        setAttendanceData({
+          attendance: attendanceList,
+          totalClasses,
+          presentClasses,
+          attendancePercentage,
+          progress: attendancePercentage,
+        });
         setLoading(false);
       } catch (error) {
         alert(error.response?.data?.message || "Unauthorized access. Please enroll first.");
@@ -127,7 +148,7 @@ const StudentCourseView = () => {
                       </a>
                     </div>
                   )}
-                  {course.syllabus?.map((item, index) => (
+                  {course.syllabus?.length > 0 ? course.syllabus.map((item, index) => (
                     <div key={index} className="flex gap-6 group">
                       <div className="flex flex-col items-center">
                         <div className="w-10 h-10 rounded-full border-2 border-primary-100 flex items-center justify-center font-black text-primary-500 group-hover:bg-primary-600 group-hover:text-white group-hover:border-primary-600 transition-all">
@@ -141,14 +162,14 @@ const StudentCourseView = () => {
                         <div className="mt-2 text-xs font-bold text-slate-400 uppercase tracking-widest">Est. Week {item.week}</div>
                       </div>
                     </div>
-                  )) || <div className="text-center py-10 text-slate-400 italic">No syllabus content available.</div>}
+                  )) : <div className="text-center py-10 text-slate-400 italic">No syllabus content available.</div>}
                 </div>
               )}
 
               {/* Resources Tab */}
               {activeTab === "resources" && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {course.resources?.map((res, index) => (
+                  {course.resources?.length > 0 ? course.resources.map((res, index) => (
                     <div key={index} className="resource-item p-6 rounded-2xl border border-slate-100 hover:border-primary-100 hover:shadow-md transition-all flex items-center gap-4">
                       <div className="h-12 w-12 rounded-xl bg-slate-50 flex items-center justify-center text-2xl">
                         {res.type === "video" ? "📺" : res.type === "document" ? "📄" : "🔗"}
@@ -166,7 +187,7 @@ const StudentCourseView = () => {
                         </a>
                       </div>
                     </div>
-                  )) || <div className="col-span-full text-center py-10 text-slate-400 italic">No resources uploaded yet.</div>}
+                  )) : <div className="col-span-full text-center py-10 text-slate-400 italic">No resources uploaded yet.</div>}
                 </div>
               )}
 
@@ -188,17 +209,17 @@ const StudentCourseView = () => {
                     </div>
                   </div>
 
-                  {attendanceData?.attendance?.map((rec, i) => (
+                  {attendanceData?.attendance?.length > 0 ? attendanceData.attendance.map((rec, i) => (
                     <div key={i} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100 mb-2">
                       <div className="flex items-center gap-4">
                         <div className={`h-2 w-2 rounded-full ${rec.status === "present" ? "bg-emerald-500" : "bg-red-500"}`}></div>
-                        <span className="font-bold text-slate-700">{new Date(rec.date).toLocaleDateString()}</span>
+                        <span className="font-bold text-slate-700">{formatSafeDate(rec.date)}</span>
                       </div>
                       <span className={`text-[10px] font-black uppercase px-3 py-1 rounded-full ${rec.status === "present" ? "bg-emerald-100 text-emerald-600" : "bg-red-100 text-red-600"}`}>
                         {rec.status}
                       </span>
                     </div>
-                  )) || <div className="text-center py-10 text-slate-400 italic">No attendance records found.</div>}
+                  )) : <div className="text-center py-10 text-slate-400 italic">No attendance records found.</div>}
                 </div>
               )}
 

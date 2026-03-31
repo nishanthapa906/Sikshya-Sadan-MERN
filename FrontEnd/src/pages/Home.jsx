@@ -20,28 +20,42 @@ function Home() {
     try {
       setIsLoading(true);
 
-      // 1. Get Banners  →  /api/banners
-      let bannerRes = await fetch(`${baseUrl}/banners`);
-      bannerRes = await bannerRes.json();
-      setBanners(bannerRes.data || []);
+      const [bannerRes, statsRes, courseRes, testimonialRes] = await Promise.allSettled([
+        fetch(`${baseUrl}/banners`),
+        fetch(`${baseUrl}/stats`),
+        fetch(`${baseUrl}/courses?featured=true&limit=6`),
+        fetch(`${baseUrl}/public/testimonials`)
+      ]);
 
-      // 2. Get Stats  →  /api/stats
-      let statsRes = await fetch(`${baseUrl}/stats`);
-      statsRes = await statsRes.json();
-      setStats(statsRes.data || null);
+      if (bannerRes.status === "fulfilled" && bannerRes.value.ok) {
+        const json = await bannerRes.value.json();
+        setBanners(json.data || []);
+      } else {
+        setBanners([]);
+      }
 
-      // 3. Get Courses  →  /api/courses
-      let courseRes = await fetch(`${baseUrl}/courses?featured=true&limit=6`);
-      courseRes = await courseRes.json();
-      setCourses(courseRes.courses || []);
+      if (statsRes.status === "fulfilled" && statsRes.value.ok) {
+        const json = await statsRes.value.json();
+        setStats(json.data || null);
+      } else {
+        setStats(null);
+      }
 
-      // 4. Get Testimonials  →  /api/public/testimonials
-      let testimonialRes = await fetch(`${baseUrl}/public/testimonials`);
-      testimonialRes = await testimonialRes.json();
-      setTestimonials(testimonialRes.data ? testimonialRes.data.slice(0, 3) : []);
+      if (courseRes.status === "fulfilled" && courseRes.value.ok) {
+        const json = await courseRes.value.json();
+        setCourses(json.courses || []);
+      } else {
+        setCourses([]);
+      }
+
+      if (testimonialRes.status === "fulfilled" && testimonialRes.value.ok) {
+        const json = await testimonialRes.value.json();
+        setTestimonials(json.data ? json.data.slice(0, 3) : []);
+      } else {
+        setTestimonials([]);
+      }
 
       setIsLoading(false);
-      toast.success("Welcome to Sikshya Sadan! 🎉");
     } catch (error) {
       console.log(error);
       setIsLoading(false);
@@ -166,8 +180,8 @@ function Home() {
       </section>
 
       {/* ===== SEARCH BOX ===== */}
-      <div className="w-[85%] m-auto -mt-10 z-40 relative bg-white p-6 shadow-md border border-gray-200 rounded-2xl">
-        <form onSubmit={handleSearch} className="flex gap-4">
+      <div className="w-[92%] md:w-[85%] m-auto -mt-10 z-40 relative bg-white p-4 md:p-6 shadow-md border border-gray-200 rounded-2xl">
+        <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-3 md:gap-4">
           <input
             type="text"
             placeholder="Find a course..."
@@ -177,7 +191,7 @@ function Home() {
           />
           <button
             type="submit"
-            className="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold text-lg hover:bg-blue-700"
+            className="bg-blue-600 text-white px-6 md:px-8 py-3 rounded-lg font-bold text-base md:text-lg hover:bg-blue-700"
           >
             SEARCH
           </button>
@@ -185,27 +199,27 @@ function Home() {
       </div>
 
       {/* ===== STATS ===== */}
-      <section className="w-[85%] m-auto mt-20 bg-white p-10 border border-gray-200 shadow-sm flex justify-between items-center rounded-2xl">
+      <section className="w-[92%] md:w-[85%] m-auto mt-20 bg-white p-6 md:p-10 border border-gray-200 shadow-sm grid grid-cols-2 lg:grid-cols-4 gap-6 rounded-2xl">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-800">{stats?.totalStudents || 0}+</h1>
+          <h1 className="text-4xl font-bold text-gray-800">{stats?.totalStudents ?? "N/A"}</h1>
           <p className="text-lg font-semibold text-gray-500 uppercase mt-2">Enrolled Students</p>
         </div>
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-800">{stats?.totalCourses || 0}</h1>
+          <h1 className="text-4xl font-bold text-gray-800">{stats?.totalCourses ?? "N/A"}</h1>
           <p className="text-lg font-semibold text-gray-500 uppercase mt-2">Global Courses</p>
         </div>
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-800">{stats?.totalInstructors || 0}</h1>
+          <h1 className="text-4xl font-bold text-gray-800">{stats?.totalInstructors ?? "N/A"}</h1>
           <p className="text-lg font-semibold text-gray-500 uppercase mt-2">Expert Instructors</p>
         </div>
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-800">5+</h1>
-          <p className="text-lg font-semibold text-gray-500 uppercase mt-2">Years of Excellence</p>
+          <h1 className="text-4xl font-bold text-gray-800">{stats?.totalEnrollments ?? "N/A"}</h1>
+          <p className="text-lg font-semibold text-gray-500 uppercase mt-2">Total Enrollments</p>
         </div>
       </section>
 
       {/* ===== COURSES ===== */}
-      <section className="w-[85%] m-auto mt-20">
+      <section className="w-[92%] md:w-[85%] m-auto mt-20">
         <div className="text-center mb-10">
           <h1 className="text-4xl font-bold">Top Rated Programs</h1>
           <p className="text-xl text-gray-500 mt-2">Explore our most popular courses.</p>
@@ -233,8 +247,8 @@ function Home() {
                 {/* Course Details */}
                 <div className="p-6 space-y-4">
                   <div className="flex justify-between text-gray-500 font-semibold text-sm border-b pb-3">
-                    <span>⏱ {course.duration || "3 Months"}</span>
-                    <span>⭐ {course.rating || "5.0"}</span>
+                    <span>⏱ {course.duration ?? "N/A"}</span>
+                    <span>⭐ {course.rating ?? "N/A"}</span>
                   </div>
 
                   <h1 className="text-xl font-bold line-clamp-2 h-14">{course.title}</h1>
@@ -242,9 +256,9 @@ function Home() {
                   {/* Instructor */}
                   <div className="flex items-center gap-3 bg-gray-50 rounded-lg p-3 border border-gray-200">
                     <div className="w-10 h-10 bg-gray-300 rounded-full overflow-hidden flex items-center justify-center font-bold">
-                      {course.instructor?.photo ? (
+                      {course.instructor?.avatar ? (
                         <img
-                          src={`${imageUrl}/${course.instructor.photo}`}
+                          src={`${imageUrl}/${course.instructor.avatar}`}
                           className="w-full h-full object-cover"
                           alt=""
                         />
@@ -289,9 +303,9 @@ function Home() {
       </section>
 
       {/* ===== TESTIMONIALS ===== */}
-      <section className="w-[85%] m-auto mt-20 flex gap-10">
+      <section className="w-[92%] md:w-[85%] m-auto mt-20 flex flex-col lg:flex-row gap-10">
         {/* Left Text */}
-        <div className="w-[35%] space-y-6 flex flex-col justify-center">
+        <div className="w-full lg:w-[35%] space-y-6 flex flex-col justify-center">
           <h1 className="text-4xl font-bold">Hear from our Alumni</h1>
           <p className="text-xl text-gray-500">
             Real stories from real learners who transformed their careers at Sikshya Sadan.
@@ -305,7 +319,7 @@ function Home() {
         </div>
 
         {/* Right Cards */}
-        <div className="w-[60%] flex gap-6">
+        <div className="w-full lg:w-[60%] grid md:grid-cols-2 gap-6">
           {testimonials.length > 0 ? (
             testimonials.map((t) => (
               <div
@@ -313,22 +327,20 @@ function Home() {
                 className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm flex-1 flex flex-col justify-between"
               >
                 <div>
-                  <div className="flex text-orange-500 mb-4">
-                    {"⭐".repeat(t.rating || 5)}
-                  </div>
+                  <div className="text-orange-500 mb-4 font-bold">Rating: {t.rating ?? "N/A"}</div>
                   <p className="text-gray-600 italic text-lg mb-6">"{t.comment}"</p>
                 </div>
                 <div className="flex items-center gap-4 border-t pt-4">
                   <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center font-bold text-blue-600 overflow-hidden">
-                    {t.student?.photo ? (
-                      <img src={`${imageUrl}/${t.student.photo}`} alt="" className="w-full h-full object-cover" />
+                    {t.avatar ? (
+                      <img src={`${imageUrl}/${t.avatar}`} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      t.student?.name?.charAt(0)
+                      t.name?.charAt(0)
                     )}
                   </div>
                   <div>
-                    <h1 className="font-bold text-lg">{t.student?.name}</h1>
-                    <p className="text-sm text-gray-500">{t.course?.title}</p>
+                    <h1 className="font-bold text-lg">{t.name}</h1>
+                    <p className="text-sm text-gray-500">{t.role}</p>
                   </div>
                 </div>
               </div>
@@ -342,12 +354,12 @@ function Home() {
       </section>
 
       {/* ===== CALL TO ACTION ===== */}
-      <section className="w-[85%] m-auto mt-20 rounded-3xl bg-blue-900 p-16 text-center text-white space-y-6">
+      <section className="w-[92%] md:w-[85%] m-auto mt-20 rounded-3xl bg-blue-900 p-8 md:p-16 text-center text-white space-y-6">
         <h1 className="text-4xl font-bold">Your Future in Tech Begins Here.</h1>
         <p className="text-xl text-gray-300 md:w-[600px] m-auto">
           Join our community of developers and innovators. Enroll today and get access to premium resources and mentorship.
         </p>
-        <div className="flex justify-center gap-6 pt-4">
+        <div className="flex flex-col md:flex-row justify-center gap-4 md:gap-6 pt-4">
           <Link
             to="/admission"
             className="bg-orange-500 text-white font-bold p-4 px-10 rounded-xl hover:bg-orange-600"

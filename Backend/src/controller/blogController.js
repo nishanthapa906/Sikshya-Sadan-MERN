@@ -48,7 +48,7 @@ export const getBlogBySlug = async (req, res) => {
         const blog = await Blog.findOneAndUpdate(
             { slug, isPublished: true },
             { $inc: { views: 1 } },
-            { new: true }
+            { returnDocument: 'after' }
         );
         
         if (!blog) {
@@ -99,8 +99,14 @@ export const getBlogMeta = async (req, res) => {
 // Create blog (instructor/admin only)
 export const createBlog = async (req, res) => {
     try {
-        const { title, slug, content, category, excerpt, tags } = req.body;
+        const { title, slug, content, category, excerpt, tags, isPublished } = req.body;
         const thumbnail = req.file?.filename;
+        const parsedTags = Array.isArray(tags)
+            ? tags
+            : String(tags || '')
+                .split(',')
+                .map((t) => t.trim())
+                .filter(Boolean);
         
         const blog = new Blog({
             title,
@@ -109,7 +115,8 @@ export const createBlog = async (req, res) => {
             thumbnail,
             category,
             excerpt,
-            tags,
+            tags: parsedTags,
+            isPublished: isPublished === 'false' ? false : true,
             author: {
                 _id: req.user._id,
                 name: req.user.name,
@@ -163,8 +170,17 @@ export const updateBlog = async (req, res) => {
         blog.content = content || blog.content;
         blog.category = category || blog.category;
         blog.excerpt = excerpt || blog.excerpt;
-        blog.tags = tags || blog.tags;
-        blog.isPublished = isPublished !== undefined ? isPublished : blog.isPublished;
+        blog.tags = tags !== undefined
+            ? (Array.isArray(tags)
+                ? tags
+                : String(tags)
+                    .split(',')
+                    .map((t) => t.trim())
+                    .filter(Boolean))
+            : blog.tags;
+        blog.isPublished = isPublished !== undefined
+            ? (isPublished === true || isPublished === 'true')
+            : blog.isPublished;
         
         if (req.file?.filename) {
             blog.thumbnail = req.file.filename;

@@ -54,6 +54,7 @@ import ManageBlogs from '../pages/blog/ManageBlogs';
 import JobsManagement from '../pages/jobs/JobsManagement';
 import Jobs from '../pages/jobs/Jobs';
 import VerifyCompletion from '../pages/Instrucutor/VerifyCompletion';
+import TestimonialsManagement from '../pages/admin/TestimonialsManagement';
 // import JobsManagement from '../pages/JobsManagement';
 
 // Protected Route
@@ -139,6 +140,7 @@ function AppRouter() {
             <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['admin']}><Users /></ProtectedRoute>} />
             <Route path="/admin/finance" element={<ProtectedRoute allowedRoles={['admin']}><AdminFinance /></ProtectedRoute>} />
             <Route path="/admin/jobs" element={<ProtectedRoute allowedRoles={['admin']}><JobsManagement /></ProtectedRoute>} /> 
+            <Route path="/admin/testimonials" element={<ProtectedRoute allowedRoles={['admin']}><TestimonialsManagement /></ProtectedRoute>} /> 
             {/* 
             
             

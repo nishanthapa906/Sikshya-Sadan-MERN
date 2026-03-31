@@ -278,6 +278,55 @@ export const isEnrolled = async (req, res) => {
     }
 };
 
+// Get My Attendance (from enrollment attendance records)
+export const getMyAttendance = async (req, res) => {
+    try {
+        const enrollment = await Enrollment.findOne({
+            student: req.user.id,
+            course: req.params.courseId,
+            paymentStatus: { $in: ['completed', 'installment'] }
+        });
+
+        if (!enrollment) {
+            return res.status(404).json({
+                status: 404,
+                success: false,
+                message: 'You are not enrolled in this course.'
+            });
+        }
+
+        const attendanceList = (enrollment.attendance || []).sort(
+            (a, b) => new Date(b.date) - new Date(a.date)
+        );
+
+        const summary = {
+            present: 0,
+            late: 0,
+            absent: 0,
+            total: attendanceList.length
+        };
+
+        attendanceList.forEach((record) => {
+            if (record.status === 'present') summary.present++;
+            else if (record.status === 'late') summary.late++;
+            else if (record.status === 'absent') summary.absent++;
+        });
+
+        return res.status(200).json({
+            status: 200,
+            success: true,
+            data: attendanceList,
+            summary
+        });
+    } catch (error) {
+        return res.status(500).json({
+            status: 500,
+            success: false,
+            message: error.message
+        });
+    }
+};
+
 
 
 

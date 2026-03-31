@@ -14,8 +14,8 @@ const Jobs = () => {
             setLoading(true);
             try {
                 const res = await publicAPI.getJobs({ type: selType });
-                setJobs(res.data.data.jobs || []);
-                setTypes(res.data.data.types || []);
+                setJobs(res.data.data?.jobs || []);
+                setTypes(res.data.data?.types || []);
             } catch (err) {
                 console.error(err);
             } finally {
@@ -44,7 +44,7 @@ const Jobs = () => {
                         <div className="space-y-6">
                             {jobs.length > 0 ? (
                                 jobs.map(job => (
-                                    <div key={job._id} className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100 flex flex-col md:flex-row md:items-center gap-10 hover:border-primary-100 transition-all group">
+                                    <div key={job._id} className="bg-white p-6 md:p-8 rounded-[2.5rem] shadow-xl border border-slate-100 flex flex-col md:flex-row md:items-center gap-6 md:gap-10 hover:border-primary-100 transition-all group">
                                         <div className="h-24 w-24 bg-slate-50 rounded-3xl flex items-center justify-center p-4 border border-slate-50 shadow-inner group-hover:bg-primary-50 transition-colors">
                                             {job.companyLogo ? (
                                                 <img src={`${UPLOAD_URL}/${job.companyLogo}`} alt={job.company} className="object-contain h-full w-full" />
