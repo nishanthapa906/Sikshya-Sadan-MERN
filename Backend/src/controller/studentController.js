@@ -1,5 +1,7 @@
 import Enrollment from '../models/enrollmentModel.js';
 import Course from '../models/courseModel.js';
+import Assignment from '../models/assignmentModel.js';
+import Submission from '../models/submissionModel.js';
 
 
 // Dashboard
@@ -17,10 +19,11 @@ export const getDashboard = async (req, res) => {
         // Count unique assignments for enrolled courses
         const courseIds = enrollments.map(e => e.course._id);
         const assignments = await Assignment.find({ course: { $in: courseIds } });
+        const submissions = await Submission.find({ student: req.user.id });
 
         let pendingCount = 0;
         assignments.forEach(a => {
-            const mySub = a.submissions?.find(s => s.student.toString() === req.user.id);
+            const mySub = submissions.find(s => s.assignment.toString() === a._id.toString());
             if (!mySub) pendingCount++;
         });
 

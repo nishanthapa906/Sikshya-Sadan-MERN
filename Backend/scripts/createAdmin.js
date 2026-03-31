@@ -16,17 +16,19 @@ const createAdmin = async () => {
             isActive: true
         };
 
-        // Check if admin exists
-        const adminExists = await User.findOne({ email: adminDetails.email });
+        // Remove old admin if exists to ensure password hashing works
+        await User.findOneAndDelete({ email: adminDetails.email });
 
-        if (adminExists) {
-            console.log('Admin user already exists');
-            process.exit();
-        }
+        // Hash the password properly
+        const bcrypt = await import('bcryptjs');
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(adminDetails.password, salt);
+        
+        adminDetails.password = hashedPassword;
 
         // Create admin
         await User.create(adminDetails);
-        console.log('Admin user created successfully');
+        console.log('Admin user created successfully ');
         console.log('Email: admin@sikshyasadan.com');
         console.log('Password: adminpassword123');
 

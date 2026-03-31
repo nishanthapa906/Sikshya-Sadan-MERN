@@ -133,10 +133,10 @@ function Navbar() {
                 </div>
 
                 {/* DROPDOWN */}
-                <div className="hidden group-hover:flex flex-col absolute right-0 bg-white shadow-lg border rounded-xl p-2 w-52 mt-2">
-
-                  <NavLink
-                    to={`/${user?.role}/dashboard`}
+                <div className="hidden group-hover:flex flex-col absolute right-0 top-full pt-2 w-52">
+                  <div className="bg-white shadow-lg border rounded-xl p-2 flex flex-col w-full text-black">
+                    <NavLink
+                      to={`/${user?.role}/dashboard`}
                     className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded"
                   >
                     <FaTachometerAlt /> Dashboard
@@ -156,6 +156,7 @@ function Navbar() {
                     <FaSignOutAlt /> Logout
                   </button>
 
+                  </div>
                 </div>
               </div>
             ) : (

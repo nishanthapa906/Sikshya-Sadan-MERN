@@ -362,9 +362,9 @@ const Certificates = () => {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                         {issuedCertificates.map((cert) => (
-                            <div key={cert._id} className="bg-white p-10 rounded-[3.5rem] shadow-2xl border border-slate-100 relative group transition-all hover:-translate-y-2">
+                            <div key={cert._id} className="bg-gradient-to-br from-slate-900 to-emerald-900 p-10 rounded-[3.5rem] shadow-2xl border-2 border-emerald-500 relative group transition-all hover:-translate-y-2">
                                 {/* Verified badge */}
-                                <div className="absolute -top-4 -right-4 w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg z-10">
+                                <div className="absolute -top-4 -right-4 w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg z-10 border-4 border-white">
                                     <FaCheckCircle />
                                 </div>
 
@@ -373,39 +373,49 @@ const Certificates = () => {
                                     <div className="flex items-center gap-3">
                                         <SikshyadanLogo size={52} />
                                         <div>
-                                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Sikshya Sadan</p>
-                                            <p className="text-xs font-black text-slate-600">Certified</p>
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-emerald-300">Sikshya Sadan</p>
+                                            <p className="text-xs font-black text-emerald-400">Certified</p>
                                         </div>
                                     </div>
-                                    <span className="text-[9px] font-black uppercase text-slate-300 tracking-widest italic">
-                                        {cert.certificateId?.split('-').pop() || 'VALID'}
+                                    <span className="text-[9px] font-black uppercase text-emerald-300 tracking-widest italic">
+                                        {cert.certificateNumber || cert._id}
                                     </span>
                                 </div>
 
                                 {/* Student name on cert */}
-                                <div className="bg-slate-50 rounded-2xl p-4 mb-4 border border-slate-100">
-                                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Awarded To</p>
-                                    <p className="text-lg font-black text-slate-900 italic">{studentName || cert.student?.name || 'Student'}</p>
+                                <div className="bg-white/10 rounded-2xl p-4 mb-4 border border-emerald-400/30 backdrop-blur">
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-emerald-300 mb-1">Awarded To</p>
+                                    <p className="text-lg font-black text-white italic">{studentName || cert.student?.name || 'Student'}</p>
                                 </div>
 
-                                <h3 className="text-lg font-black text-slate-900 italic tracking-tight mb-6 group-hover:text-primary-600 transition-colors leading-tight">{cert.course?.title}</h3>
+                                <h3 className="text-lg font-black text-white italic tracking-tight mb-4 group-hover:text-emerald-300 transition-colors leading-tight">{cert.course?.title}</h3>
 
-                                <div className="space-y-3 mb-8">
-                                    <div className="flex items-center gap-3 text-xs font-bold text-slate-500">
-                                        <FaClock className="text-primary-300" />
-                                        Issued: {formatDate(cert.certificateIssuedDate)}
+                                <div className="space-y-3 mb-6">
+                                    <div className="flex items-center gap-3 text-xs font-bold text-emerald-200">
+                                        <FaClock className="text-emerald-400" />
+                                        Issued: {formatDate(cert.issuedDate)}
                                     </div>
-                                    <div className="flex items-center gap-3 text-xs font-bold text-slate-400 break-all">
-                                        <FaShieldAlt className="text-primary-300 flex-shrink-0" />
-                                        <span className="truncate">{cert.certificateId || cert._id}</span>
+                                    <div className="flex items-center gap-3 text-xs font-bold text-emerald-300 break-all">
+                                        <FaShieldAlt className="text-emerald-400 flex-shrink-0" />
+                                        <span className="truncate">{cert.certificateNumber}</span>
                                     </div>
                                 </div>
+
+                                {/* Visit Office Message */}
+                                {cert.claimStatus === 'claimed' || cert.status === 'available' && (
+                                    <div className="bg-amber-50/20 border border-amber-400/50 rounded-2xl p-4 mb-6 backdrop-blur">
+                                        <p className="text-xs font-bold text-amber-200 italic flex items-center gap-2">
+                                            <span className="text-sm">📍</span>
+                                            Please visit our office to claim your physical certificate!
+                                        </p>
+                                    </div>
+                                )}
 
                                 <button
-                                    className="w-full py-5 bg-white border-2 border-slate-900 text-slate-900 rounded-2xl font-black italic tracking-widest flex items-center justify-center gap-3 hover:bg-slate-900 hover:text-white transition-all shadow-md active:scale-95"
+                                    className="w-full py-5 bg-white text-slate-900 rounded-2xl font-black italic tracking-widest flex items-center justify-center gap-3 hover:bg-emerald-300 transition-all shadow-lg active:scale-95"
                                     onClick={() => handleDownload(cert)}
                                 >
-                                    <FaDownload /> Download Certificate
+                                    <FaDownload /> Download Digital Copy
                                 </button>
                             </div>
                         ))}

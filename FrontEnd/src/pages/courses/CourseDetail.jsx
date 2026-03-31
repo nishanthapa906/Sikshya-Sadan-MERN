@@ -19,10 +19,10 @@ const CourseDetail = () => {
             try {
                 const [courseRes, demoRes] = await Promise.all([
                     courseAPI.getCourseById(id),
-                    demoSlotAPI.getSlotsByCourseId(id)
+                    demoSlotAPI.getSlotsByCourseId(id).catch(() => ({ data: { data: [] } }))
                 ]);
                 setCourse(courseRes.data.course);
-                setDemoSlots(demoRes.data.data);
+                setDemoSlots(demoRes?.data?.data || []);
 
                 // Check enrollment if user logged in
                 if (user) {

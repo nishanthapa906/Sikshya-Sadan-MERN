@@ -19,11 +19,11 @@ const StudentCourseView = () => {
       try {
         const [courseRes, attendanceRes] = await Promise.all([
           courseAPI.getCourseById(id),
-          studentAPI.getMyAttendance(id),
+          studentAPI.getMyAttendance(id).catch(() => ({ data: { data: null } })),
         ]);
 
         setCourse(courseRes.data.course);
-        setAttendanceData(attendanceRes.data.data);
+        setAttendanceData(attendanceRes?.data?.data || null);
         setLoading(false);
       } catch (error) {
         alert(error.response?.data?.message || "Unauthorized access. Please enroll first.");

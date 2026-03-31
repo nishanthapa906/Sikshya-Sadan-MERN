@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { courseAPI, paymentAPI } from '../../services/api';
+import { courseAPI } from '../../services/api';
+// Using the new custom hook for clean, beginner-friendly payment logic!
+import { usePayment } from '../../hooks/usePayment'; 
 import { FaUserPlus, FaCheckCircle, FaExclamationCircle, FaCreditCard } from 'react-icons/fa';
 
 const Admission = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { processPayment, loading: paymentLoading, error: paymentError } = usePayment(); // <-- Our custom hook
 
     // Initial course if navigated from course details
     const initialCourseId = location.state?.courseId || '';
@@ -19,7 +22,6 @@ const Admission = () => {
         installmentPlanId: ''
     });
     const [loading, setLoading] = useState(true);
-    const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
 
     const selectedCourse = courses.find(c => c._id === formData.courseId);
@@ -50,50 +52,14 @@ const Admission = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!formData.courseId) return setError('Please select a course');
-
-        setSubmitting(true);
         setError('');
 
         try {
-            let res;
-
-            if (formData.paymentMethod === 'esewa') {
-                res = await paymentAPI.initiateEsewa(formData.courseId, formData.installmentPlanId);
-                const { esewaParams, url: esewaUrl } = res.data;
-                const form = document.createElement('form');
-                form.setAttribute('method', 'POST');
-                form.setAttribute('action', esewaUrl);
-
-                for (const key in esewaParams) {
-                    const hiddenField = document.createElement('input');
-                    hiddenField.setAttribute('type', 'hidden');
-                    hiddenField.setAttribute('name', key);
-                    hiddenField.setAttribute('value', esewaParams[key]);
-                    form.appendChild(hiddenField);
-                }
-
-                document.body.appendChild(form);
-                form.submit();
-            } else if (formData.paymentMethod === 'stripe') {
-                res = await paymentAPI.createStripeSession(formData.courseId, formData.installmentPlanId);
-                if (res.data.url) {
-                    window.location.href = res.data.url;
-                } else {
-                    throw new Error('Failed to create Stripe checkout session');
-                }
-            } else if (formData.paymentMethod === 'khalti') {
-                res = await paymentAPI.initiateKhalti(formData.courseId, formData.installmentPlanId);
-                if (res.data.payment_url) {
-                    window.location.href = res.data.payment_url;
-                } else {
-                    // Fallback or error
-                    throw new Error('Failed to get Khalti payment URL');
-                }
-            }
+            // All complex payment processing redirects are now abstracted to our custom hook
+            await processPayment(formData.paymentMethod, formData.courseId, formData.installmentPlanId);
         } catch (err) {
             console.error('Admission Error:', err);
-            setError(err.response?.data?.message || 'Admission failed. Please try again.');
-            setSubmitting(false);
+            setError('Payment Failed to Initiate. Please try again.');
         }
     };
 
@@ -138,6 +104,11 @@ const Admission = () => {
                         {error && (
                             <div className="bg-red-50 text-red-600 p-4 rounded-2xl flex items-center gap-3 text-sm font-bold animate-fadeIn">
                                 <FaExclamationCircle /> {error}
+                            </div>
+                        )}
+                        {paymentError && (
+                            <div className="bg-red-50 text-red-600 p-4 rounded-2xl flex items-center gap-3 text-sm font-bold animate-fadeIn">
+                                <FaExclamationCircle /> {paymentError}
                             </div>
                         )}
 
@@ -263,10 +234,10 @@ const Admission = () => {
                             <div className="pt-6">
                                 <button
                                     type="submit"
-                                    disabled={submitting}
+                                    disabled={paymentLoading}
                                     className="w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black text-lg shadow-xl shadow-slate-200 hover:bg-primary-600 transition-all flex items-center justify-center gap-3 disabled:bg-slate-300"
                                 >
-                                    {submitting ? 'Redirecting to Payment...' : 'Proceed to Payment'}
+                                    {paymentLoading ? 'Redirecting to Payment...' : 'Proceed to Payment'}
                                 </button>
                                 <p className="text-[10px] text-center text-slate-400 font-bold uppercase mt-4 tracking-tighter">Secure 256-bit SSL encrypted payment.</p>
                             </div>

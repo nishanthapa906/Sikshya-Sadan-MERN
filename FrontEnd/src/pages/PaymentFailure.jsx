@@ -23,13 +23,17 @@ const PaymentFailure = () => {
                     const failureData = JSON.parse(decodedString);
                     const transaction_uuid = failureData.transaction_uuid;
 
-                    if (transaction_uuid) {
-                        // Fetch enrollment details to get course info
+                    if (transaction_uuid && token) {
+                        // Only fetch enrollment details if authenticated
                         const response = await paymentAPI.getPaymentStatus(transaction_uuid);
 
                         if (response.data.success) {
                             setEnrollment(response.data.data);
                         }
+                    } else if (transaction_uuid) {
+                        console.log("Payment failed for transaction:", transaction_uuid);
+                        // Store transaction ID for user reference even without token
+                        setEnrollment({ transactionId: transaction_uuid });
                     }
                 }
             } catch (error) {

@@ -26,44 +26,69 @@ const PaymentSuccess = () => {
                 let response;
 
                 if (eseData) {
-                    // eSewa v2 verification
+                    // eSewa v2 verification - doesn't require auth (browser redirect)
+                    console.log("Verifying eSewa payment...");
                     response = await paymentAPI.verifyEsewa({ data: eseData });
+                    console.log("eSewa verification response:", response);
                 } else if (stripeSessionId) {
                     // Stripe verification
+                    if (!token) {
+                        setError('Authentication required for payment verification');
+                        setLoading(false);
+                        return;
+                    }
                     response = await paymentAPI.verifyStripe({
                         sessionId: stripeSessionId,
                         enrollmentId
                     });
                 } else if (khaltiPidx) {
                     // Khalti verification
+                    if (!token) {
+                        setError('Authentication required for payment verification');
+                        setLoading(false);
+                        return;
+                    }
                     response = await paymentAPI.verifyKhalti({
                         pidx: khaltiPidx,
                         enrollmentId
                     });
                 } else if (enrollmentId) {
                     // Just fetch status if already verified or for other methods
+                    if (!token) {
+                        setError('Authentication required for payment verification');
+                        setLoading(false);
+                        return;
+                    }
                     response = await paymentAPI.getPaymentStatus(enrollmentId);
                 } else {
-                    setError('Invalid payment verification request.');
+                    setError('Invalid payment verification request - no payment data provided.');
                     setLoading(false);
                     return;
                 }
 
-                if (response.data.success) {
+                if (response.data?.success) {
+                    console.log("Payment verified successfully:", response.data);
                     setEnrollment(response.data.enrollment || response.data.data);
                 } else {
-                    setError(response.data.message || 'Payment verification failed.');
+                    console.error("Payment verification failed:", response.data);
+                    setError(response.data?.message || 'Payment verification failed. Please try again or contact support.');
                 }
             } catch (err) {
                 console.error('Verification error:', err);
-                setError(err.response?.data?.message || 'Failed to verify payment. Please contact support.');
+                const errorMessage = err.response?.data?.message || err.message || 'Failed to verify payment. Please contact support.';
+                setError(errorMessage);
             } finally {
                 setLoading(false);
             }
         };
 
-        if (token) {
+        // eSewa verification doesn't require token (browser redirect)
+        // Other methods require authentication
+        if (eseData || token) {
             verifyPayment();
+        } else if (!loading) {
+            setError('Authentication required. Please log in to verify your payment.');
+            setLoading(false);
         }
     }, [eseData, stripeSessionId, khaltiPidx, enrollmentId, token]);
 

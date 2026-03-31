@@ -39,23 +39,47 @@ onSubmit={handleSubmit}
 className="bg-white p-6 rounded space-y-3"
 >
 
-<h2 className="text-lg font-bold">Edit User</h2>
+<h2 className="text-xl font-bold text-slate-900 mb-2">Edit User</h2>
 
-<input
-value={data.name}
-onChange={e=>setData({...data,name:e.target.value})}
-className="border p-2 w-full"
-/>
+<div className="space-y-4">
+    <div>
+        <label className="text-sm font-semibold text-slate-700 block mb-1">Name</label>
+        <input
+        value={data.name}
+        onChange={e=>setData({...data,name:e.target.value})}
+        className="border border-slate-300 rounded p-2 w-full"
+        />
+    </div>
 
-<input
-value={data.email}
-onChange={e=>setData({...data,email:e.target.value})}
-className="border p-2 w-full"
-/>
+    <div>
+        <label className="text-sm font-semibold text-slate-700 block mb-1">Email</label>
+        <input
+        value={data.email}
+        onChange={e=>setData({...data,email:e.target.value})}
+        className="border border-slate-300 rounded p-2 w-full"
+        />
+    </div>
 
-<button className="bg-indigo-600 text-white px-4 py-2 rounded">
-Update
-</button>
+    <div>
+        <label className="text-sm font-semibold text-slate-700 block mb-1">Role</label>
+        <select
+        value={data.role}
+        onChange={e=>setData({...data,role:e.target.value})}
+        className="border border-slate-300 rounded p-2 w-full bg-white"
+        >
+            <option value="student">Student</option>
+            <option value="instructor">Instructor</option>
+            <option value="admin">Admin</option>
+        </select>
+    </div>
+</div>
+
+<div className="flex gap-3 justify-end mt-6">
+    <button type="button" onClick={onClose} className="px-4 py-2 border rounded text-slate-600 hover:bg-slate-50">Cancel</button>
+    <button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded font-semibold">
+    Update User
+    </button>
+</div>
 
 </form>
 

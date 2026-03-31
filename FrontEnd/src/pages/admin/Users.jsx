@@ -76,7 +76,15 @@ return search && role && status;
 
 return (
 
-<div className="p-6">
+<div className="min-h-screen bg-slate-50 pt-28 pb-12">
+<div className="max-w-7xl mx-auto px-6">
+
+<div className="mb-8">
+    <h1 className="text-3xl font-black tracking-tight text-slate-900 mb-2">User Management</h1>
+    <p className="text-slate-500 text-lg">Add new users, edit roles, and manage system access.</p>
+</div>
+
+<div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
 
 <UserFilters
 searchTerm={searchTerm}
@@ -112,6 +120,8 @@ onClose={()=>setShowEdit(false)}
 refresh={fetchUsers}
 />
 
+</div>
+</div>
 </div>
 
 );
