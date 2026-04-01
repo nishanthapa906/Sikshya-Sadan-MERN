@@ -4,19 +4,14 @@ import Enrollment from '../models/enrollmentModel.js';
 
 export const getStats = async (req, res) => {
     try {
-        const totalStudents = await User.countDocuments({ role: 'student' });
-        const totalCourses = await Course.countDocuments();
-        const totalEnrollments = await Enrollment.countDocuments();
-
         const stats = {
-            totalStudents,
-            totalCourses,
-            totalEnrollments,
+            totalStudents: await User.countDocuments({ role: 'student' }),
+            totalCourses: await Course.countDocuments(),
+            totalEnrollments: await Enrollment.countDocuments(),
             totalInstructors: await User.countDocuments({ role: 'instructor' })
         };
-
-        res.status(200).json({ status: 200, success: true, data: stats });
-    } catch (error) {
-        res.status(500).json({ status: 500, success: false, message: error.message });
+        res.json({ success: true, data: stats });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
     }
 };

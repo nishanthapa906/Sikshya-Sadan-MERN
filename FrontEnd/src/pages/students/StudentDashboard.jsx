@@ -6,229 +6,111 @@ import { FaBookOpen, FaCheckCircle, FaTasks, FaCertificate, FaArrowRight, FaCloc
 
 const StudentDashboard = () => {
     const { user } = useAuth();
-    const [dashboardData, setDashboardData] = useState(null);
+    const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetchDashboardData();
+        studentAPI.getDashboard()
+            .then(res => { if (res.data.success) setData(res.data.data); })
+            .catch(err => console.error(err))
+            .finally(() => setLoading(false));
     }, []);
 
-    const fetchDashboardData = async () => {
-        try {
-            setLoading(true);
-            const response = await studentAPI.getDashboard();
-            if (response.data.success) {
-                setDashboardData(response.data.data);
-            }
-        } catch (err) {
-            console.error('Error fetching dashboard:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
+    if (loading) return <div style={{ padding: '2rem' }}>Loading...</div>;
 
-    if (loading) return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-10 w-10 border-2 border-slate-900 border-t-transparent"></div>
-        </div>
-    );
+    const d = data || { enrollments: [], totalCourses: 0, activeCourses: 0, completedCourses: 0, pendingAssignments: 0 };
 
-    const data = dashboardData || {
-        enrollments: [],
-        totalCourses: 0,
-        activeCourses: 0,
-        completedCourses: 0,
-        pendingAssignments: 0
-    };
+    const stats = [
+        { label: 'Enrolled', val: d.totalCourses, icon: <FaBookOpen /> },
+        { label: 'Active', val: d.activeCourses, icon: <FaClock /> },
+        { label: 'Completed', val: d.completedCourses, icon: <FaCheckCircle /> },
+        { label: 'Pending Tasks', val: d.pendingAssignments, icon: <FaTasks /> },
+    ];
 
     return (
-        <div className="min-h-screen bg-slate-50 relative">
-            {/* Background design element */}
-            <div className="absolute top-0 left-0 w-full h-[350px] bg-slate-900 z-0"></div>
+        <div style={{ padding: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h1 style={{ margin: 0 }}>Welcome, {user?.name?.split(' ')[0]}</h1>
+                <Link to="/courses" style={{ padding: '0.4rem 1rem', background: '#1e1b4b', color: '#fff', borderRadius: '8px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    Browse Courses <FaArrowRight />
+                </Link>
+            </div>
 
-            {/* Main Content Wrapper */}
-            <div className="relative z-10 pt-32 pb-24 max-w-7xl mx-auto px-6 lg:px-12">
-                
-                {/* Header Section */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
-                    <div className="text-white space-y-2">
-                        <h1 className="text-4xl font-bold tracking-tight">
-                            Welcome back, {user?.name?.split(' ')[0]}
-                        </h1>
-                        <p className="text-slate-400 text-lg">
-                            Track your progress, assignments, and accomplishments.
-                        </p>
+            {/* Stats */}
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '1.5rem' }}>
+                <thead>
+                    <tr style={{ background: '#f0f0f0' }}>
+                        {stats.map(s => <th key={s.label} style={{ padding: '0.75rem', textAlign: 'center' }}>{s.icon} {s.label}</th>)}
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        {stats.map(s => <td key={s.label} style={{ padding: '0.75rem', textAlign: 'center', fontSize: '1.5rem', fontWeight: 'bold' }}>{s.val}</td>)}
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
+                {/* Enrollments */}
+                <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                        <h2 style={{ margin: 0 }}>My Courses</h2>
+                        <Link to="/student/my-courses" style={{ fontSize: '0.85rem', color: '#6366f1' }}>View all <FaArrowRight /></Link>
                     </div>
-                    <Link
-                        to="/courses"
-                        className="inline-flex items-center gap-2 px-6 py-3.5 bg-white text-slate-900 text-sm font-bold rounded-xl hover:bg-slate-100 transition-colors shadow-lg"
-                    >
-                        Browse Courses <FaArrowRight size={12} />
-                    </Link>
+                    {d.enrollments.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '2rem', background: '#f9fafb', borderRadius: '10px', border: '1px dashed #e2e8f0' }}>
+                            <p>Not enrolled yet.</p>
+                            <Link to="/courses" style={{ color: '#6366f1', fontWeight: 'bold' }}>Explore Programs</Link>
+                        </div>
+                    ) : (
+                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                            <thead>
+                                <tr style={{ background: '#f0f0f0' }}>
+                                    <th style={{ padding: '0.5rem', textAlign: 'left' }}>Course</th>
+                                    <th style={{ padding: '0.5rem', textAlign: 'left' }}>Progress</th>
+                                    <th style={{ padding: '0.5rem', textAlign: 'left' }}>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {d.enrollments.slice(0, 3).map(e => (
+                                    <tr key={e._id} style={{ borderBottom: '1px solid #eee' }}>
+                                        <td style={{ padding: '0.5rem' }}>
+                                            <div style={{ fontWeight: 'bold' }}>{e.course?.title}</div>
+                                            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>by {e.course?.instructor?.name}</div>
+                                        </td>
+                                        <td style={{ padding: '0.5rem' }}>
+                                            <div style={{ background: '#e2e8f0', borderRadius: '99px', height: '6px', width: '100px' }}>
+                                                <div style={{ background: '#6366f1', height: '6px', borderRadius: '99px', width: `${e.progress || 0}%` }} />
+                                            </div>
+                                            <span style={{ fontSize: '0.75rem' }}>{e.progress || 0}%</span>
+                                        </td>
+                                        <td style={{ padding: '0.5rem' }}>
+                                            <Link to={`/student/course/${e.course?._id}`} style={{ padding: '0.25rem 0.75rem', background: '#1e1b4b', color: '#fff', borderRadius: '6px', textDecoration: 'none', fontSize: '0.8rem' }}>
+                                                Resume
+                                            </Link>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
                 </div>
 
-                {/* Metrics Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-                    <div className="bg-white rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="h-12 w-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400">
-                                <FaBookOpen size={20} />
-                            </div>
-                            <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Enrolled</p>
-                        </div>
-                        <p className="text-4xl font-black text-slate-900">{data.totalCourses}</p>
-                        <p className="text-sm text-slate-500 mt-2 font-medium">Total registered courses</p>
-                    </div>
-
-                    <div className="bg-white rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="h-12 w-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
-                                <FaClock size={20} />
-                            </div>
-                            <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Active</p>
-                        </div>
-                        <p className="text-4xl font-black text-slate-900">{data.activeCourses}</p>
-                        <p className="text-sm text-slate-500 mt-2 font-medium">Courses in progress</p>
-                    </div>
-
-                    <div className="bg-white rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="h-12 w-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600">
-                                <FaCheckCircle size={20} />
-                            </div>
-                            <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Finished</p>
-                        </div>
-                        <p className="text-4xl font-black text-slate-900">{data.completedCourses}</p>
-                        <p className="text-sm text-slate-500 mt-2 font-medium">Completed programs</p>
-                    </div>
-
-                    <div className="bg-white rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="h-12 w-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500">
-                                <FaTasks size={20} />
-                            </div>
-                            <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Pending</p>
-                        </div>
-                        <p className="text-4xl font-black text-slate-900">{data.pendingAssignments}</p>
-                        <p className="text-sm text-slate-500 mt-2 font-medium">Assignments to submit</p>
+                {/* Sidebar Nav */}
+                <div>
+                    <h2>Quick Access</h2>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        {[
+                            ['/student/my-courses', <FaBookOpen />, 'My Courses'],
+                            ['/student/assignments', <FaTasks />, 'Assignments'],
+                            ['/student/certificates', <FaCertificate />, 'Certificates'],
+                        ].map(([to, icon, label]) => (
+                            <Link key={to} to={to} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', textDecoration: 'none', color: '#1e293b', fontWeight: 'bold' }}>
+                                <span style={{ color: '#6366f1' }}>{icon}</span> {label} <FaArrowRight style={{ marginLeft: 'auto', color: '#94a3b8' }} />
+                            </Link>
+                        ))}
                     </div>
                 </div>
-
-                {/* Content Layout */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                    
-                    {/* Main Feed: Courses */}
-                    <div className="lg:col-span-2 space-y-8">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-2xl font-bold text-slate-900">Current Learning Path</h2>
-                            <Link to="/student/my-courses" className="text-sm font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-2">
-                                View all <FaArrowRight size={10} />
-                            </Link>
-                        </div>
-
-                        <div className="space-y-6">
-                            {data.enrollments && data.enrollments.length > 0 ? (
-                                data.enrollments.slice(0, 3).map(enrollment => (
-                                    <div key={enrollment._id} className="bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col md:flex-row items-start md:items-center gap-8 hover:border-slate-300 transition-colors">
-                                        <div className="h-32 w-48 rounded-2xl overflow-hidden bg-slate-100 flex-shrink-0">
-                                            <img
-                                                src={enrollment.course?.thumbnail
-                                                    ? `${UPLOAD_URL}/${enrollment.course.thumbnail}`
-                                                    : 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=400&q=80'}
-                                                alt={enrollment.course?.title}
-                                                className="h-full w-full object-cover"
-                                            />
-                                        </div>
-                                        <div className="flex-grow w-full">
-                                            <div className="flex justify-between items-start mb-4">
-                                                <div>
-                                                    <h3 className="text-xl font-bold text-slate-900 mb-1">{enrollment.course?.title}</h3>
-                                                    <p className="text-sm font-medium text-slate-500">Instructor: {enrollment.course?.instructor?.name}</p>
-                                                </div>
-                                            </div>
-                                            
-                                            <div className="space-y-3 mt-4">
-                                                <div className="flex justify-between text-sm font-bold">
-                                                    <span className="text-slate-700">Progress</span>
-                                                    <span className="text-indigo-600">{enrollment.progress || 0}%</span>
-                                                </div>
-                                                <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                                                    <div
-                                                        className="h-full bg-indigo-600 rounded-full transition-all duration-1000"
-                                                        style={{ width: `${enrollment.progress || 0}%` }}
-                                                    ></div>
-                                                </div>
-                                            </div>
-
-                                            <div className="mt-6 flex flex-wrap gap-4">
-                                                <Link
-                                                    to={`/student/course/${enrollment.course?._id}`}
-                                                    className="px-6 py-2.5 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 transition-colors"
-                                                >
-                                                    Resume Course
-                                                </Link>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="bg-white rounded-[2rem] p-16 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] text-center">
-                                    <div className="h-20 w-20 bg-slate-50 rounded-3xl flex items-center justify-center text-slate-300 mx-auto mb-6">
-                                        <FaBookOpen size={32} />
-                                    </div>
-                                    <h3 className="text-xl font-bold text-slate-900 mb-2">No active courses</h3>
-                                    <p className="text-slate-500 font-medium mb-8 max-w-sm mx-auto">
-                                        You are not enrolled in any programs yet. Browse our catalog to begin your journey.
-                                    </p>
-                                    <Link to="/courses" className="inline-flex px-8 py-3.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-indigo-600 transition-colors">
-                                        Explore Programs
-                                    </Link>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Sidebar: Navigation Menu */}
-                    <div className="space-y-8">
-                        <h2 className="text-2xl font-bold text-slate-900">Platform Access</h2>
-                        
-                        <div className="bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 space-y-2">
-                            <Link to="/student/my-courses" className="flex items-center gap-5 p-4 rounded-2xl hover:bg-slate-50 transition-colors group">
-                                <div className="h-12 w-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600 group-hover:bg-white group-hover:shadow-md transition-all">
-                                    <FaBookOpen size={18} />
-                                </div>
-                                <div className="flex-grow">
-                                    <h4 className="text-base font-bold text-slate-900">My Curriculum</h4>
-                                    <p className="text-sm text-slate-500 font-medium">Access your enrolled courses</p>
-                                </div>
-                                <FaArrowRight size={14} className="text-slate-300 group-hover:text-slate-900 transition-colors" />
-                            </Link>
-
-                            <Link to="/student/assignments" className="flex items-center gap-5 p-4 rounded-2xl hover:bg-slate-50 transition-colors group">
-                                <div className="h-12 w-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600 group-hover:bg-white group-hover:shadow-md transition-all">
-                                    <FaTasks size={18} />
-                                </div>
-                                <div className="flex-grow">
-                                    <h4 className="text-base font-bold text-slate-900">Assignments</h4>
-                                    <p className="text-sm text-slate-500 font-medium">Submit and review tasks</p>
-                                </div>
-                                <FaArrowRight size={14} className="text-slate-300 group-hover:text-slate-900 transition-colors" />
-                            </Link>
-
-                            <Link to="/student/certificates" className="flex items-center gap-5 p-4 rounded-2xl hover:bg-slate-50 transition-colors group">
-                                <div className="h-12 w-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600 group-hover:bg-white group-hover:shadow-md transition-all">
-                                    <FaCertificate size={18} />
-                                </div>
-                                <div className="flex-grow">
-                                    <h4 className="text-base font-bold text-slate-900">Certificates</h4>
-                                    <p className="text-sm text-slate-500 font-medium">Download claimed awards</p>
-                                </div>
-                                <FaArrowRight size={14} className="text-slate-300 group-hover:text-slate-900 transition-colors" />
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-
             </div>
         </div>
     );

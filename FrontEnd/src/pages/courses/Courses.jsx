@@ -1,227 +1,78 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { FaFilter, FaSearch, FaClock, FaStar, FaGraduationCap, FaArrowRight } from 'react-icons/fa';
 import { courseAPI, UPLOAD_URL } from '../../services/api';
 
 const Courses = () => {
-    const [searchParams, setSearchParams] = useSearchParams();
+    const [params, setParams] = useSearchParams();
     const [courses, setCourses] = useState([]);
-    const [categories, setCategories] = useState([]);
+    const [cats, setCats] = useState([]);
     const [loading, setLoading] = useState(true);
-
-    // Filter states from URL or default
     const [filters, setFilters] = useState({
-        search: searchParams.get('search') || '',
-        category: searchParams.get('category') || '',
-        skillLevel: searchParams.get('skillLevel') || '',
-        sort: searchParams.get('sort') || 'newest',
-        minPrice: searchParams.get('minPrice') || '',
-        maxPrice: searchParams.get('maxPrice') || ''
+        search: params.get('search') || '', category: params.get('category') || '',
+        skillLevel: params.get('skillLevel') || '', sort: params.get('sort') || 'newest'
     });
 
     useEffect(() => {
-        const fetchCourses = async () => {
-            setLoading(true);
-            try {
-                const res = await courseAPI.getAllCourses(filters);
-                setCourses(res.data.courses);
-                if (res.data.categories) setCategories(res.data.categories);
-            } catch (err) {
-                console.error(err);
-            } finally {
-                setLoading(false);
-            }
-        };
+        setLoading(true);
+        courseAPI.getAllCourses(filters)
+            .then(res => { setCourses(res.data.courses); setCats(res.data.categories || []); })
+            .catch(() => alert('Failed to load courses'))
+            .finally(() => setLoading(false));
+            
+        const clean = Object.fromEntries(Object.entries(filters).filter(([_, v]) => v !== ''));
+        setParams(clean);
+    }, [filters, setParams]);
 
-        fetchCourses();
-        // Update URL
-        const cleanFilters = Object.fromEntries(Object.entries(filters).filter(([_, v]) => v !== ''));
-        setSearchParams(cleanFilters);
-    }, [filters, setSearchParams]);
+    const setF = (k, v) => setFilters(p => ({ ...p, [k]: v }));
 
-    const handleFilterChange = (name, value) => {
-        setFilters(prev => ({ ...prev, [name]: value }));
-    };
+    if (loading) return <div className="p-8 text-center text-slate-500 font-bold min-h-[50vh]">Loading courses...</div>;
 
     return (
-        <div style={{ background: 'var(--gray-50)', minHeight: '100vh', padding: 'var(--spacing-3xl) 0' }}>
-            <div className="container">
-                {/* PAGE HEADER */}
-                <div className="text-center" style={{ maxWidth: '800px', margin: '0 auto var(--spacing-2xl)' }}>
-                    <h1 style={{ marginBottom: 'var(--spacing-md)' }}>All Courses</h1>
-                    <p style={{ color: 'var(--gray-500)', fontSize: '1.125rem' }}>
-                        Browse our IT courses and find the right program for your career goals.
-                    </p>
-                </div>
-
-                <div className="flex" style={{ flexWrap: 'wrap', gap: 'var(--spacing-xl)' }}>
-                    {/* SIDEBAR FILTERS - DESKTOP */}
-                    <div style={{ flex: '1 1 250px', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
-                        {/* SEARCH */}
-                        <div className="card" style={{ padding: 'var(--spacing-lg)' }}>
-                            <h5 className="flex items-center" style={{ gap: '0.5rem', marginBottom: 'var(--spacing-md)' }}>
-                                <FaSearch style={{ color: 'var(--primary-color)' }} /> Search
-                            </h5>
-                            <input
-                                type="text"
-                                placeholder="Course name..."
-                                className="form-input"
-                                value={filters.search}
-                                onChange={(e) => handleFilterChange('search', e.target.value)}
-                            />
-                        </div>
-
-                        {/* CATEGORIES */}
-                        <div className="card" style={{ padding: 'var(--spacing-lg)' }}>
-                            <h5 className="flex items-center" style={{ gap: '0.5rem', marginBottom: 'var(--spacing-md)' }}>
-                                <FaFilter style={{ color: 'var(--primary-color)' }} /> Categories
-                            </h5>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
-                                <label className="flex items-center" style={{ gap: '0.5rem', cursor: 'pointer' }}>
-                                    <input
-                                        type="radio"
-                                        name="category"
-                                        checked={filters.category === ''}
-                                        onChange={() => handleFilterChange('category', '')}
-                                        style={{ accentColor: 'var(--primary-color)' }}
-                                    />
-                                    <span style={{ fontWeight: filters.category === '' ? 'bold' : 'normal', color: filters.category === '' ? 'var(--primary-color)' : 'var(--gray-700)' }}>
-                                        All Courses
-                                    </span>
-                                </label>
-                                {categories.map(cat => (
-                                    <label key={cat} className="flex items-center" style={{ gap: '0.5rem', cursor: 'pointer' }}>
-                                        <input
-                                            type="radio"
-                                            name="category"
-                                            checked={filters.category === cat}
-                                            onChange={() => handleFilterChange('category', cat)}
-                                            style={{ accentColor: 'var(--primary-color)' }}
-                                        />
-                                        <span style={{ fontWeight: filters.category === cat ? 'bold' : 'normal', color: filters.category === cat ? 'var(--primary-color)' : 'var(--gray-700)' }}>
-                                            {cat}
-                                        </span>
-                                    </label>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* SKILL LEVEL */}
-                        <div className="card" style={{ padding: 'var(--spacing-lg)' }}>
-                            <h5 style={{ marginBottom: 'var(--spacing-md)' }}>Level</h5>
-                            <select
-                                className="form-select"
-                                value={filters.skillLevel}
-                                onChange={(e) => handleFilterChange('skillLevel', e.target.value)}
-                            >
-                                <option value="">All Levels</option>
-                                <option value="Beginner">Beginner</option>
-                                <option value="Intermediate">Intermediate</option>
-                                <option value="Advanced">Advanced</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    {/* MAIN CONTENT */}
-                    <div style={{ flex: '3 1 600px' }}>
-                        {/* SORT & RESULT INFO */}
-                        <div className="card flex flex-between" style={{ padding: 'var(--spacing-md)', marginBottom: 'var(--spacing-xl)', flexWrap: 'wrap', gap: 'var(--spacing-md)' }}>
-                            <p style={{ color: 'var(--gray-600)', margin: 0 }}>
-                                Showing <strong style={{ color: 'var(--gray-900)' }}>{courses.length}</strong> results
-                            </p>
-                            <div className="flex items-center" style={{ gap: 'var(--spacing-sm)' }}>
-                                <span style={{ fontSize: '0.875rem', color: 'var(--gray-500)', fontWeight: 'bold', textTransform: 'uppercase' }}>Sort By:</span>
-                                <select
-                                    className="form-select"
-                                    style={{ padding: '0.5rem 1rem', width: 'auto' }}
-                                    value={filters.sort}
-                                    onChange={(e) => handleFilterChange('sort', e.target.value)}
-                                >
-                                    <option value="newest">Newest First</option>
-                                    <option value="price-low">Price: Low to High</option>
-                                    <option value="price-high">Price: High to Low</option>
-                                    <option value="rating">Top Rated</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        {/* COURSE GRID */}
-                        {loading ? (
-                            <div className="grid grid-3">
-                                {[...Array(6)].map((_, i) => (
-                                    <div key={i} className="card animate-pulse" style={{ height: '400px', background: 'var(--gray-100)' }}></div>
-                                ))}
-                            </div>
-                        ) : courses.length > 0 ? (
-                            <div className="grid grid-3 animate-fadeIn">
-                                {courses.map(course => (
-                                    <div key={course._id} className="card p-0 flex flex-col" style={{ overflow: 'hidden' }}>
-                                        <div style={{ position: 'relative', height: '200px' }}>
-                                            <img
-                                                src={`${UPLOAD_URL}/${course.thumbnail}`}
-                                                alt={course.title}
-                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                            />
-                                            <div style={{ position: 'absolute', top: '10px', left: '10px' }}>
-                                                <span className="badge badge-info">{course.category}</span>
-                                            </div>
-                                        </div>
-                                        
-                                        <div className="card-body" style={{ padding: 'var(--spacing-md)', flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)', marginBottom: 0 }}>
-                                            <div className="flex flex-between" style={{ fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase', color: 'var(--gray-500)' }}>
-                                                <span className="flex items-center" style={{ gap: '0.25rem' }}><FaGraduationCap style={{ color: 'var(--secondary-color)' }} /> {course.skillLevel}</span>
-                                                <span className="flex items-center" style={{ gap: '0.25rem' }}><FaClock /> {course.duration || '8 wks'}</span>
-                                            </div>
-                                            
-                                            <h5 style={{ margin: 'var(--spacing-sm) 0' }}>
-                                                <Link to={`/courses/${course._id}`} style={{ color: 'var(--gray-900)' }}>{course.title}</Link>
-                                            </h5>
-                                            
-                                            <div className="flex items-center" style={{ gap: '0.5rem' }}>
-                                                <div style={{ height: '30px', width: '30px', flexShrink: 0, borderRadius: '50%', overflow: 'hidden', background: 'var(--gray-200)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
-                                                    {course.instructor?.photo ? <img src={`${UPLOAD_URL}/${course.instructor.photo}`} alt={course.instructor?.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : course.instructor?.name?.charAt(0)}
-                                                </div>
-                                                <span style={{ fontSize: '0.875rem', color: 'var(--gray-600)', fontWeight: '500' }}>{course.instructor?.name}</span>
-                                            </div>
-                                            
-                                            <div style={{ marginTop: 'auto', paddingTop: 'var(--spacing-md)' }}>
-                                                <div className="flex flex-between items-center" style={{ marginBottom: 'var(--spacing-md)', borderTop: '1px solid var(--gray-100)', paddingTop: 'var(--spacing-md)' }}>
-                                                    <div className="flex items-center" style={{ gap: '0.25rem', fontSize: '0.875rem' }}>
-                                                        <FaStar style={{ color: 'var(--accent-gold)' }} />
-                                                        <strong style={{ color: 'var(--gray-800)' }}>4.8</strong>
-                                                        <span style={{ color: 'var(--gray-400)' }}>({course.reviews?.length || 0})</span>
-                                                    </div>
-                                                    <div>
-                                                        <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--gray-900)' }}>Rs. {course.fee}</p>
-                                                    </div>
-                                                </div>
-                                                
-                                                <Link to={`/courses/${course._id}`} className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%' }}>
-                                                    View Details <FaArrowRight />
-                                                </Link>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="card text-center" style={{ padding: 'var(--spacing-3xl)' }}>
-                                <div className="flex flex-center" style={{ height: '60px', width: '60px', borderRadius: '50%', background: 'var(--gray-100)', margin: '0 auto var(--spacing-md)' }}>
-                                    <FaSearch style={{ color: 'var(--gray-400)' }} size={24} />
-                                </div>
-                                <h4 style={{ marginBottom: 'var(--spacing-sm)' }}>No courses found</h4>
-                                <p style={{ color: 'var(--gray-500)', marginBottom: 'var(--spacing-lg)' }}>Try adjusting your filters or search term.</p>
-                                <button
-                                    onClick={() => setFilters({ search: '', category: '', skillLevel: '', sort: 'newest', minPrice: '', maxPrice: '' })}
-                                    className="btn btn-primary"
-                                >
-                                    Clear Filters
-                                </button>
-                            </div>
-                        )}
-                    </div>
+        <div className="max-w-6xl mx-auto my-10 px-6 font-sans">
+            <h1 className="text-4xl font-black text-slate-800 text-center mb-10">Explore Our Courses</h1>
+            
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-10 flex flex-col md:flex-row gap-4 items-center justify-between">
+                <input placeholder="Search courses..." value={filters.search} onChange={e => setF('search', e.target.value)} className="w-full md:w-auto flex-1 p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium" />
+                <div className="w-full md:w-auto flex flex-col sm:flex-row gap-4 flex-[2] justify-end">
+                    <select value={filters.category} onChange={e => setF('category', e.target.value)} className="w-full sm:w-1/3 p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
+                        <option value="">All Categories</option>
+                        {cats.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                    <select value={filters.skillLevel} onChange={e => setF('skillLevel', e.target.value)} className="w-full sm:w-1/3 p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
+                        <option value="">All Levels</option><option value="Beginner">Beginner</option><option value="Intermediate">Intermediate</option><option value="Advanced">Advanced</option>
+                    </select>
+                    <select value={filters.sort} onChange={e => setF('sort', e.target.value)} className="w-full sm:w-1/3 p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
+                        <option value="newest">Newest</option><option value="price-low">Price: Low</option><option value="price-high">Price: High</option><option value="rating">Top Rated</option>
+                    </select>
                 </div>
             </div>
+
+            {courses.length === 0 ? <p className="text-center text-slate-500 font-bold p-10 bg-white rounded-2xl border border-slate-200">No courses match your filters.</p> : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {courses.map(c => (
+                        <div key={c._id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-xl transition-shadow flex flex-col group">
+                            <div className="relative overflow-hidden h-48 bg-slate-100">
+                                <img src={`${UPLOAD_URL}/${c.thumbnail}`} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                <div className="absolute top-4 left-4 bg-indigo-600 text-white text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full">{c.category}</div>
+                            </div>
+                            <div className="p-6 flex flex-col flex-1">
+                                <h3 className="text-xl font-bold text-slate-800 mb-2 line-clamp-2">{c.title}</h3>
+                                <div className="text-slate-500 text-sm font-medium mb-4 flex items-center justify-between">
+                                    <span>{c.skillLevel}</span>
+                                    {c.rating && <span className="flex items-center gap-1 text-yellow-500 font-bold">★ {c.rating}</span>}
+                                </div>
+                                <div className="flex justify-between items-end mt-auto pt-6 border-t border-slate-100">
+                                    <div>
+                                        <div className="text-[10px] text-slate-400 font-black uppercase tracking-widest leading-none mb-1">Fee</div>
+                                        <span className="font-black text-2xl text-emerald-500">Rs. {c.fee}</span>
+                                    </div>
+                                    <Link to={`/courses/${c._id}`} className="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-colors">Details</Link>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 };

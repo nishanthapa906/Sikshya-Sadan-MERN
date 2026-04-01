@@ -1,129 +1,80 @@
 import React, { useEffect, useState } from 'react';
 import { studentAPI, UPLOAD_URL } from '../../services/api';
-import { FaAward, FaDownload, FaImage, FaSpinner } from 'react-icons/fa';
+import { FaAward, FaDownload, FaImage } from 'react-icons/fa';
 
 const Certificates = () => {
-    const [certificates, setCertificates] = useState([]);
-    const [completedCourses, setCompletedCourses] = useState([]);
+    const [certs, setCerts] = useState([]);
+    const [waiting, setWaiting] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+    const [err, setErr] = useState('');
 
     useEffect(() => {
-        fetchCertificates();
+        const load = async () => {
+            try {
+                const res = await studentAPI.getMyCertificates();
+                setCerts((res.data?.data || []).filter(c => c?.certificateImage && ['issued', 'available', 'claimed'].includes(c?.status)));
+                const cRes = await studentAPI.getMyCourses();
+                setWaiting((cRes.data?.enrollments || []).filter(e => e.status === 'completed' && !e.certificateIssued));
+            } catch (e) { setErr(e.response?.data?.message || 'Failed to load'); }
+            finally { setLoading(false); }
+        };
+        load();
     }, []);
 
-    const fetchCertificates = async () => {
-        try {
-            setLoading(true);
-            const res = await studentAPI.getMyCertificates();
-            const list = res.data?.data || [];
-            const issuedWithImage = list.filter(
-                (c) => c?.certificateImage && ['issued', 'available', 'claimed'].includes(c?.status)
-            );
-            setCertificates(issuedWithImage);
-
-            const courseRes = await studentAPI.getMyCourses();
-            const enrollments = courseRes.data?.enrollments || [];
-            const waitingForCertificate = enrollments.filter((e) => e.status === 'completed' && !e.certificateIssued);
-            setCompletedCourses(waitingForCertificate);
-            setError('');
-        } catch (err) {
-            setError(err.response?.data?.message || 'Failed to load certificates.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-                <div className="flex items-center gap-3 text-slate-600 font-bold">
-                    <FaSpinner className="animate-spin" />
-                    Loading certificates...
-                </div>
-            </div>
-        );
-    }
+    if (loading) return <div style={{ padding: '2rem' }}>Loading...</div>;
 
     return (
-        <div className="min-h-screen bg-slate-50 pt-24 pb-20">
-            <div className="container mx-auto px-6">
-                <div className="mb-10">
-                    <h1 className="text-4xl font-black text-slate-900">My Certificates</h1>
-                    <p className="text-slate-500 mt-2">
-                        Certificates appear here after your instructor marks completion and uploads certificate image.
-                    </p>
+        <div style={{ padding: '1.5rem' }}>
+            <h1>My Certificates</h1>
+            {err && <p style={{ color: 'red' }}>{err}</p>}
+            {waiting.length > 0 && (
+                <div style={{ background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: '8px', padding: '0.75rem 1rem', marginBottom: '1rem' }}>
+                    <strong>Awaiting certificate from instructor:</strong>
+                    <ul style={{ margin: '0.5rem 0 0 1rem' }}>
+                        {waiting.map(e => <li key={e._id} style={{ fontSize: '0.85rem' }}>{e.course?.title}</li>)}
+                    </ul>
                 </div>
-
-                {error && (
-                    <div className="mb-8 rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-red-600 font-semibold">
-                        {error}
-                    </div>
-                )}
-
-                {completedCourses.length > 0 && (
-                    <div className="mb-8 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-amber-700">
-                        <p className="font-bold mb-2">Completed Courses</p>
-                        <ul className="list-disc pl-5 text-sm space-y-1">
-                            {completedCourses.map((item) => (
-                                <li key={item._id}>
-                                    {item.course?.title} - completed, waiting for instructor certificate upload.
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                )}
-
-                {certificates.length === 0 ? (
-                    <div className="bg-white rounded-3xl p-14 text-center border border-slate-100 shadow-sm">
-                        <FaAward className="mx-auto text-5xl text-slate-300 mb-4" />
-                        <h2 className="text-2xl font-black text-slate-800">No issued certificate yet</h2>
-                        <p className="text-slate-500 mt-2">
-                            Complete your course, ensure attendance and grading are done, then ask your instructor to upload your certificate.
-                        </p>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        {certificates.map((cert) => {
-                            const imageUrl = `${UPLOAD_URL}/${cert.certificateImage}`;
+            )}
+            {certs.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '3rem', background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                    <FaAward style={{ fontSize: '3rem', color: '#cbd5e1', marginBottom: '1rem' }} />
+                    <h2>No certificates yet</h2>
+                    <p style={{ color: '#64748b' }}>Complete your course and ask your instructor to upload your certificate.</p>
+                </div>
+            ) : (
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                        <tr style={{ background: '#f0f0f0' }}>
+                            <th style={{ padding: '0.5rem', textAlign: 'left' }}>Preview</th>
+                            <th style={{ padding: '0.5rem', textAlign: 'left' }}>Course</th>
+                            <th style={{ padding: '0.5rem', textAlign: 'left' }}>Certificate No.</th>
+                            <th style={{ padding: '0.5rem', textAlign: 'left' }}>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {certs.map(c => {
+                            const url = `${UPLOAD_URL}/${c.certificateImage}`;
                             return (
-                                <div key={cert._id} className="bg-white rounded-3xl border border-slate-100 shadow-md overflow-hidden">
-                                    <div className="aspect-[16/10] bg-slate-100">
-                                        <img
-                                            src={imageUrl}
-                                            alt={`${cert.course?.title || 'Course'} certificate`}
-                                            className="w-full h-full object-cover"
-                                        />
-                                    </div>
-                                    <div className="p-6">
-                                        <h3 className="text-xl font-black text-slate-900">{cert.course?.title}</h3>
-                                        <p className="text-sm text-slate-500 mt-1">
-                                            Certificate No: {cert.certificateNumber}
-                                        </p>
-                                        <div className="mt-5 flex gap-3">
-                                            <a
-                                                href={imageUrl}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="px-4 py-2 rounded-xl bg-slate-900 text-white font-bold text-sm inline-flex items-center gap-2"
-                                            >
-                                                <FaImage /> View
-                                            </a>
-                                            <a
-                                                href={imageUrl}
-                                                download
-                                                className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-sm inline-flex items-center gap-2"
-                                            >
-                                                <FaDownload /> Download
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
+                                <tr key={c._id} style={{ borderBottom: '1px solid #eee' }}>
+                                    <td style={{ padding: '0.5rem' }}>
+                                        <img src={url} alt={c.course?.title} style={{ width: '80px', height: '50px', objectFit: 'cover', borderRadius: '4px' }} />
+                                    </td>
+                                    <td style={{ padding: '0.5rem', fontWeight: 'bold' }}>{c.course?.title}</td>
+                                    <td style={{ padding: '0.5rem', fontSize: '0.85rem', color: '#64748b' }}>{c.certificateNumber}</td>
+                                    <td style={{ padding: '0.5rem', display: 'flex', gap: '0.5rem' }}>
+                                        <a href={url} target="_blank" rel="noreferrer" style={{ padding: '0.25rem 0.75rem', background: '#1e1b4b', color: '#fff', borderRadius: '4px', textDecoration: 'none', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                            <FaImage /> View
+                                        </a>
+                                        <a href={url} download style={{ padding: '0.25rem 0.75rem', background: '#059669', color: '#fff', borderRadius: '4px', textDecoration: 'none', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                            <FaDownload /> Download
+                                        </a>
+                                    </td>
+                                </tr>
                             );
                         })}
-                    </div>
-                )}
-            </div>
+                    </tbody>
+                </table>
+            )}
         </div>
     );
 };

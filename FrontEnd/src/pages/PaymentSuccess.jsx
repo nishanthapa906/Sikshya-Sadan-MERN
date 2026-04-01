@@ -3,176 +3,70 @@ import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { paymentAPI } from '../services/api';
 
-
 const PaymentSuccess = () => {
-    const [searchParams] = useSearchParams();
+    const [params] = useSearchParams();
     const { token } = useAuth();
+    const nav = useNavigate();
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [enrollment, setEnrollment] = useState(null);
-    const [countdown, setCountdown] = useState(5);
-    const navigate = useNavigate();
-
-    // Get parameters from various payment gateways
-    const eseData = searchParams.get('data'); // eSewa v2
-    const stripeSessionId = searchParams.get('session_id'); // Stripe
-    const khaltiPidx = searchParams.get('pidx'); // Khalti (if using redirect)
-    const enrollmentId = searchParams.get('enrollmentId');
+    const [err, setErr] = useState(null);
+    const [data, setData] = useState(null);
+    const [count, setCount] = useState(5);
 
     useEffect(() => {
-        const verifyPayment = async () => {
+        const verify = async () => {
+            const esewa = params.get('data'), stripe = params.get('session_id'), pidx = params.get('pidx'), eid = params.get('enrollmentId');
             try {
-                setLoading(true);
-                let response;
+                let res;
+                if (esewa) res = await paymentAPI.verifyEsewa({ data: esewa });
+                else if (stripe) res = await paymentAPI.verifyStripe({ sessionId: stripe, enrollmentId: eid });
+                else if (pidx) res = await paymentAPI.verifyKhalti({ pidx, enrollmentId: eid });
+                else if (eid) res = await paymentAPI.getPaymentStatus(eid);
+                else return setErr('Invalid request');
 
-                if (eseData) {
-                    // eSewa v2 verification - doesn't require auth (browser redirect)
-                    console.log("Verifying eSewa payment...");
-                    response = await paymentAPI.verifyEsewa({ data: eseData });
-                    console.log("eSewa verification response:", response);
-                } else if (stripeSessionId) {
-                    // Stripe verification
-                    if (!token) {
-                        setError('Authentication required for payment verification');
-                        setLoading(false);
-                        return;
-                    }
-                    response = await paymentAPI.verifyStripe({
-                        sessionId: stripeSessionId,
-                        enrollmentId
-                    });
-                } else if (khaltiPidx) {
-                    // Khalti verification
-                    if (!token) {
-                        setError('Authentication required for payment verification');
-                        setLoading(false);
-                        return;
-                    }
-                    response = await paymentAPI.verifyKhalti({
-                        pidx: khaltiPidx,
-                        enrollmentId
-                    });
-                } else if (enrollmentId) {
-                    // Just fetch status if already verified or for other methods
-                    if (!token) {
-                        setError('Authentication required for payment verification');
-                        setLoading(false);
-                        return;
-                    }
-                    response = await paymentAPI.getPaymentStatus(enrollmentId);
-                } else {
-                    setError('Invalid payment verification request - no payment data provided.');
-                    setLoading(false);
-                    return;
-                }
-
-                if (response.data?.success) {
-                    console.log("Payment verified successfully:", response.data);
-                    setEnrollment(response.data.enrollment || response.data.data);
-                } else {
-                    console.error("Payment verification failed:", response.data);
-                    setError(response.data?.message || 'Payment verification failed. Please try again or contact support.');
-                }
-            } catch (err) {
-                console.error('Verification error:', err);
-                const errorMessage = err.response?.data?.message || err.message || 'Failed to verify payment. Please contact support.';
-                setError(errorMessage);
-            } finally {
-                setLoading(false);
-            }
+                if (res?.data?.success) setData(res.data.enrollment || res.data.data);
+                else setErr(res?.data?.message || 'Verification failed');
+            } catch (e) { setErr(e.response?.data?.message || 'Verification error'); }
+            finally { setLoading(false); }
         };
-
-        // eSewa verification doesn't require token (browser redirect)
-        // Other methods require authentication
-        if (eseData || token) {
-            verifyPayment();
-        } else if (!loading) {
-            setError('Authentication required. Please log in to verify your payment.');
-            setLoading(false);
-        }
-    }, [eseData, stripeSessionId, khaltiPidx, enrollmentId, token]);
+        if (params.get('data') || token) verify();
+        else { setErr('Login required'); setLoading(false); }
+    }, [params, token]);
 
     useEffect(() => {
-        if (!loading && !error && enrollment) {
-            const timer = setInterval(() => {
-                setCountdown((prev) => {
-                    if (prev <= 1) {
-                        clearInterval(timer);
-                        navigate('/student/dashboard');
-                        return 0;
-                    }
-                    return prev - 1;
-                });
-            }, 1000);
-            return () => clearInterval(timer);
+        if (!loading && !err) {
+            const t = setInterval(() => setCount(c => { if(c<=1) { nav('/student/dashboard'); return 0; } return c-1; }), 1000);
+            return () => clearInterval(t);
         }
-    }, [loading, error, enrollment, navigate]);
+    }, [loading, err, nav]);
 
-    if (loading) {
-        return (
-            <div className="payment-status-container">
-                <div className="status-card">
-                    <div className="spinner"></div>
-                    <h2>Verifying Payment...</h2>
-                    <p>Please wait while we confirm your transaction with the provider.</p>
-                </div>
+    if (loading) return <div className="p-12 text-center text-xl font-bold text-slate-500 min-h-[50vh] flex items-center justify-center">Verifying Payment...</div>;
+    if (err) return (
+        <div className="flex justify-center items-center min-h-[60vh] px-4 font-sans bg-slate-50">
+            <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-sm border border-red-200 text-center">
+                <div className="w-20 h-20 mx-auto rounded-full bg-red-50 flex items-center justify-center mb-6 text-4xl">❌</div>
+                <h2 className="text-2xl font-black text-slate-800 mb-2">Payment Failed</h2>
+                <p className="text-slate-500 mb-8">{err}</p>
+                <Link to="/courses" className="inline-block w-full bg-red-500 hover:bg-red-600 text-white font-bold py-4 rounded-xl transition-colors">Back to Courses</Link>
             </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="payment-status-container">
-                <div className="status-card error">
-                    <div className="icon">❌</div>
-                    <h2>Payment Verification Failed</h2>
-                    <p>{error}</p>
-                    <div className="actions">
-                        <Link to="/contact" className="btn btn-outline">Contact Support</Link>
-                        <Link to="/courses" className="btn btn-primary">Back to Courses</Link>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+        </div>
+    );
 
     return (
-        <div className="payment-status-container">
-            <div className="status-card success">
-                <div className="icon">✅</div>
-                <h2>Payment Successful!</h2>
-                <p>Thank you for your enrollment. Your transaction has been completed successfully.</p>
-                <div className="bg-emerald-50 text-emerald-600 font-bold p-3 rounded-xl mb-6 text-sm">
-                    Redirecting to your dashboard in {countdown} seconds...
-                </div>
-
-                {enrollment && (
-                    <div className="transaction-details">
-                        <div className="detail-item">
-                            <span>Course:</span>
-                            <strong>{enrollment.course?.title || 'Course'}</strong>
-                        </div>
-                        <div className="detail-item">
-                            <span>Transaction ID:</span>
-                            <strong>{enrollment.transactionId}</strong>
-                        </div>
-                        <div className="detail-item">
-                            <span>Amount Paid:</span>
-                            <strong>Rs. {enrollment.paidAmount || enrollment.totalAmount}</strong>
-                        </div>
-                        <div className="detail-item">
-                            <span>Status:</span>
-                            <strong className={enrollment.paymentStatus === 'completed' ? 'text-emerald-600' : 'text-amber-600'}>
-                                {enrollment.paymentStatus === 'completed' ? 'Full Payment' : 'First Installment Paid'}
-                            </strong>
-                        </div>
+        <div className="flex justify-center items-center min-h-[60vh] px-4 font-sans bg-slate-50">
+            <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-sm border border-emerald-200 text-center">
+                <div className="w-24 h-24 mx-auto rounded-full bg-emerald-50 flex items-center justify-center mb-6 text-5xl">✅</div>
+                <h1 className="text-3xl font-black text-emerald-600 mb-2">Payment Successful!</h1>
+                <p className="text-slate-500 font-medium mb-8">Redirecting to dashboard in {count}s...</p>
+                
+                {data && (
+                    <div className="bg-slate-50 p-6 rounded-xl text-left border border-slate-100 mb-8 space-y-3">
+                        <div className="flex flex-col"><span className="text-xs uppercase tracking-widest text-slate-400 font-bold">Course</span> <span className="text-slate-800 font-bold">{data.course?.title}</span></div>
+                        <div className="flex flex-col"><span className="text-xs uppercase tracking-widest text-slate-400 font-bold">Amount Paid</span> <span className="text-emerald-500 text-xl font-black">Rs. {data.paidAmount || data.totalAmount}</span></div>
+                        <div className="flex flex-col"><span className="text-xs uppercase tracking-widest text-slate-400 font-bold">Status</span> <span className="text-indigo-600 font-bold capitalize">{data.paymentStatus}</span></div>
                     </div>
                 )}
-
-                <div className="actions">
-                    <Link to="/student/dashboard" className="btn btn-primary">Go to My Learning</Link>
-                    <Link to="/courses" className="btn btn-outline">Browse More Courses</Link>
-                </div>
+                
+                <Link to="/student/dashboard" className="inline-block w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-xl transition-colors">Go to Dashboard</Link>
             </div>
         </div>
     );

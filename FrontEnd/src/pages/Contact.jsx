@@ -1,173 +1,67 @@
 import React, { useState, useEffect } from 'react';
 import { publicAPI, contactAPI } from '../services/api';
-import { FaPhone, FaEnvelope, FaMapMarkerAlt, FaPaperPlane, FaClock, FaCommentDots } from 'react-icons/fa';
 
 const Contact = () => {
-    const [settings, setSettings] = useState(null);
-    const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        subject: '',
-        message: ''
-    });
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [status, setStatus] = useState({ type: '', msg: '' });
+    const [info, setInfo] = useState(null);
+    const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
+    const [load, setLoad] = useState(false);
 
     useEffect(() => {
-        const fetchSettings = async () => {
-            try {
-                const res = await publicAPI.getSettings();
-                setSettings(res.data.data.settings);
-            } catch (err) {
-                console.error(err);
-            }
-        };
-        fetchSettings();
+        publicAPI.getSettings().then(res => setInfo(res.data.data.settings)).catch(() => {});
     }, []);
 
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-        setStatus({ type: '', msg: '' });
-
+    const submit = async (e) => {
+        e.preventDefault(); setLoad(true);
         try {
-            await contactAPI.sendMessage(formData);
-            setStatus({ type: 'success', msg: "Thank you! Your message has been sent successfully." });
-            setFormData({ name: '', email: '', subject: '', message: '' });
-        } catch (err) {
-            setStatus({ type: 'error', msg: "Something went wrong. Please try again later." });
-        } finally {
-            setIsSubmitting(false);
-        }
+            await contactAPI.sendMessage(form);
+            alert('Message Sent!'); setForm({ name: '', email: '', subject: '', message: '' });
+        } catch { alert('Failed to send message'); }
+        finally { setLoad(false); }
     };
 
     return (
-        <div className="bg-slate-50 min-h-screen pt-24 pb-24">
-            <div className="container mx-auto px-6">
-                <div className="max-w-3xl mx-auto mb-14">
-                    <h1 className="text-3xl font-bold text-slate-900 mb-3">Contact Us</h1>
-                    <p className="text-slate-500 leading-relaxed">
-                        Have questions about our courses or admission process? Send us a message and we will get back to you soon.
-                    </p>
+        <div className="max-w-5xl mx-auto my-16 px-6 font-sans">
+            <div className="text-center mb-12">
+                <h1 className="text-4xl font-black text-slate-800 mb-4">Contact Us</h1>
+                <p className="text-slate-500 text-lg">Have questions? Send us a message and we will get back to you soon.</p>
+            </div>
+
+            <div className="flex flex-col md:flex-row gap-12">
+                <div className="flex-1 bg-slate-50 p-8 rounded-2xl border border-slate-200 self-start">
+                    <h3 className="text-xl font-black text-slate-800 mb-6">Contact Info</h3>
+                    <div className="space-y-4 text-slate-700">
+                        <p><strong className="text-slate-900 block text-xs uppercase tracking-widest mb-1">Phone</strong> {info?.phone || '+977-1-1234567'}</p>
+                        <p><strong className="text-slate-900 block text-xs uppercase tracking-widest mb-1">Email</strong> {info?.email || 'info@sikshyasadan.com'}</p>
+                        <p><strong className="text-slate-900 block text-xs uppercase tracking-widest mb-1">Address</strong> {info?.address || 'Kathmandu, Nepal'}</p>
+                    </div>
+                    <hr className="my-6 border-slate-200" />
+                    <p className="text-slate-500 text-sm font-medium">Mon – Fri, <br/> 9:00 AM to 6:00 PM</p>
                 </div>
 
-                <div className="grid lg:grid-cols-3 gap-12 max-w-6xl mx-auto">
-                    {/* CONTACT INFOCARDS */}
-                    <div className="lg:col-span-1 space-y-8">
-                        <div className="bg-white p-10 rounded-[2.5rem] shadow-xl border border-slate-100 flex flex-col items-center text-center group cursor-pointer hover:bg-slate-900 hover:text-white transition-all duration-300">
-                            <div className="h-16 w-16 bg-blue-50 rounded-2xl flex items-center justify-center text-primary-600 mb-6 group-hover:bg-white/10 group-hover:text-white transition-colors">
-                                <FaPhone size={24} />
+                <div className="flex-[2] bg-white p-8 md:p-10 rounded-2xl border border-slate-200 shadow-sm">
+                    <form onSubmit={submit} className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Name</label>
+                                <input required value={form.name} onChange={e=>setForm({...form, name: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-slate-800 font-medium" />
                             </div>
-                            <h3 className="text-xl font-bold mb-2">Call Us</h3>
-                            <p className="text-slate-500 group-hover:text-slate-300 font-medium">{settings?.phone || '+977-1-1234567'}</p>
-                            <p className="text-xs mt-4 text-slate-400 font-medium">Mon – Fri, 9AM to 6PM</p>
+                            <div>
+                                <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Email</label>
+                                <input required type="email" value={form.email} onChange={e=>setForm({...form, email: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-slate-800 font-medium" />
+                            </div>
                         </div>
-                    </div>
-
-                    {/* CONTACT FORM */}
-                    <div className="lg:col-span-2">
-                        <form onSubmit={handleSubmit} className="bg-white p-12 rounded-[3.5rem] shadow-2xl border border-slate-100 space-y-8 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 h-40 w-40 bg-primary-600/5 rounded-full -mr-20 -mt-20"></div>
-                            <div className="relative z-10 mb-2">
-                                <h2 className="text-xl font-bold text-slate-900">Send a Message</h2>
-                                <p className="text-sm text-slate-500 mt-1">We typically reply within 24 hours.</p>
-                            </div>
-
-                            {status.msg && (
-                                <div className={`p-6 rounded-2xl text-sm font-bold animate-fadeIn ${status.type === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
-                                    {status.msg}
-                                </div>
-                            )}
-
-                            <div className="grid md:grid-cols-2 gap-8">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-4">Full Name</label>
-                                    <input
-                                        type="text"
-                                        name="name"
-                                        required
-                                        className="w-full bg-slate-50 border-0 rounded-2xl px-6 py-4 focus:ring-2 ring-primary-100 transition-all outline-none font-bold text-slate-800"
-                                        placeholder="John Doe"
-                                        value={formData.name}
-                                        onChange={handleChange}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-4">Email Address</label>
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        required
-                                        className="w-full bg-slate-50 border-0 rounded-2xl px-6 py-4 focus:ring-2 ring-primary-100 transition-all outline-none font-bold text-slate-800"
-                                        placeholder="john@example.com"
-                                        value={formData.email}
-                                        onChange={handleChange}
-                                    />
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-4">Subject</label>
-                                <input
-                                    type="text"
-                                    name="subject"
-                                    required
-                                    className="w-full bg-slate-50 border-0 rounded-2xl px-6 py-4 focus:ring-2 ring-primary-100 transition-all outline-none font-bold text-slate-800"
-                                    placeholder="Inquiry about MERN Stack course"
-                                    value={formData.subject}
-                                    onChange={handleChange}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-4">Your Message</label>
-                                <textarea
-                                    rows="5"
-                                    name="message"
-                                    required
-                                    className="w-full bg-slate-50 border-0 rounded-3xl px-6 py-4 focus:ring-2 ring-primary-100 transition-all outline-none font-bold text-slate-800 resize-none"
-                                    placeholder="Write your message here..."
-                                    value={formData.message}
-                                    onChange={handleChange}
-                                ></textarea>
-                            </div>
-
-                            <button
-                                type="submit"
-                                disabled={isSubmitting}
-                                className="w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black text-lg flex items-center justify-center gap-4 hover:bg-primary-600 transition-all shadow-xl disabled:bg-slate-400"
-                            >
-                                {isSubmitting ? 'Sending Request...' : 'Submit Inquiry'} <FaPaperPlane />
-                            </button>
-                        </form>
-                    </div>
-                </div>
-
-                {/* MAP SECTION */}
-                <div className="mt-24 rounded-[4rem] overflow-hidden shadow-2xl border-4 border-white h-[500px] relative">
-                    <iframe
-                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3532.240403125232!2d85.3123333150619!3d27.70895598279093!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb1907b1e42b6d%3A0xe54d6f8303fdef5b!2sKathmandu%2044600!5e0!3m2!1sen!2snp!4v1676900000000!5m2!1sen!2snp"
-                        width="100%"
-                        height="100%"
-                        style={{ border: 0 }}
-                        allowFullScreen=""
-                        loading="lazy"
-                        referrerPolicy="no-referrer-when-downgrade"
-                        title="location map"
-                    ></iframe>
-                    <div className="absolute bottom-10 left-10 bg-white/90 backdrop-blur-md p-6 rounded-3xl shadow-2xl border border-white/50 max-w-sm hidden md:block">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="h-10 w-10 bg-primary-600 text-white rounded-xl flex items-center justify-center">
-                                <FaMapMarkerAlt />
-                            </div>
-                            <h4 className="font-bold text-slate-900">Our Location</h4>
+                        <div>
+                            <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Subject</label>
+                            <input required value={form.subject} onChange={e=>setForm({...form, subject: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-slate-800 font-medium" />
                         </div>
-                        <p className="text-slate-600 font-medium text-sm leading-relaxed">
-                            Visit our training center anytime during office hours for a free consultation walk-through.
-                        </p>
-                    </div>
+                        <div>
+                            <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Message</label>
+                            <textarea required rows={5} value={form.message} onChange={e=>setForm({...form, message: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-slate-800 font-medium resize-none" />
+                        </div>
+                        <button type="submit" disabled={load} className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-xl transition-colors">
+                            {load ? 'Sending...' : 'Send Message'}
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>

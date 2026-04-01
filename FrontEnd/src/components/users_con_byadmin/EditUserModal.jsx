@@ -1,92 +1,48 @@
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
 import { adminAPI } from "../../services/api";
 
-const EditUserModal = ({show,user,onClose,refresh}) => {
+const EditUserModal = ({ show, user, onClose, refresh }) => {
+    const [data, setData] = useState({ name: "", email: "", role: "" });
 
-const [data,setData] = useState({
-name:"",
-email:"",
-role:""
-});
+    useEffect(() => { if (user) setData({ name: user.name, email: user.email, role: user.role }); }, [user]);
 
-useEffect(()=>{
-if(user){
-setData({
-name:user.name,
-email:user.email,
-role:user.role
-});
-}
-},[user]);
+    if (!show || !user) return null;
 
-if(!show || !user) return null;
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        await adminAPI.updateUser(user._id, data);
+        refresh(); onClose();
+    };
 
-const handleSubmit = async(e)=>{
-e.preventDefault();
-
-await adminAPI.updateUser(user._id,data);
-
-refresh();
-onClose();
-};
-
-return (
-
-<div className="fixed inset-0 bg-black/40 flex items-center justify-center">
-
-<form
-onSubmit={handleSubmit}
-className="bg-white p-6 rounded space-y-3"
->
-
-<h2 className="text-xl font-bold text-slate-900 mb-2">Edit User</h2>
-
-<div className="space-y-4">
-    <div>
-        <label className="text-sm font-semibold text-slate-700 block mb-1">Name</label>
-        <input
-        value={data.name}
-        onChange={e=>setData({...data,name:e.target.value})}
-        className="border border-slate-300 rounded p-2 w-full"
-        />
-    </div>
-
-    <div>
-        <label className="text-sm font-semibold text-slate-700 block mb-1">Email</label>
-        <input
-        value={data.email}
-        onChange={e=>setData({...data,email:e.target.value})}
-        className="border border-slate-300 rounded p-2 w-full"
-        />
-    </div>
-
-    <div>
-        <label className="text-sm font-semibold text-slate-700 block mb-1">Role</label>
-        <select
-        value={data.role}
-        onChange={e=>setData({...data,role:e.target.value})}
-        className="border border-slate-300 rounded p-2 w-full bg-white"
-        >
-            <option value="student">Student</option>
-            <option value="instructor">Instructor</option>
-            <option value="admin">Admin</option>
-        </select>
-    </div>
-</div>
-
-<div className="flex gap-3 justify-end mt-6">
-    <button type="button" onClick={onClose} className="px-4 py-2 border rounded text-slate-600 hover:bg-slate-50">Cancel</button>
-    <button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded font-semibold">
-    Update User
-    </button>
-</div>
-
-</form>
-
-</div>
-
-);
-
+    return (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+            <form onSubmit={handleSubmit} style={{ background: '#fff', padding: '1.5rem', borderRadius: '8px', minWidth: '320px' }}>
+                <h2 style={{ marginTop: 0 }}>Edit User</h2>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <tbody>
+                        <tr><td style={{ padding: '0.4rem 0' }}><label>Name</label></td></tr>
+                        <tr><td><input value={data.name} onChange={e => setData({ ...data, name: e.target.value })} style={{ width: '100%', padding: '0.4rem', border: '1px solid #ddd', borderRadius: '4px' }} /></td></tr>
+                        <tr><td style={{ padding: '0.4rem 0' }}><label>Email</label></td></tr>
+                        <tr><td><input value={data.email} onChange={e => setData({ ...data, email: e.target.value })} style={{ width: '100%', padding: '0.4rem', border: '1px solid #ddd', borderRadius: '4px' }} /></td></tr>
+                        <tr><td style={{ padding: '0.4rem 0' }}><label>Role</label></td></tr>
+                        <tr>
+                            <td>
+                                <select value={data.role} onChange={e => setData({ ...data, role: e.target.value })} style={{ width: '100%', padding: '0.4rem', border: '1px solid #ddd', borderRadius: '4px' }}>
+                                    <option value="student">Student</option>
+                                    <option value="instructor">Instructor</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                    <button type="button" onClick={onClose} style={{ padding: '0.4rem 1rem', cursor: 'pointer' }}>Cancel</button>
+                    <button type="submit" style={{ padding: '0.4rem 1rem', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Update</button>
+                </div>
+            </form>
+        </div>
+    );
 };
 
 export default EditUserModal;

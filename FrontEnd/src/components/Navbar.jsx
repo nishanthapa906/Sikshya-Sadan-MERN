@@ -55,7 +55,7 @@ function Navbar() {
     <>
       {/* NAVBAR */}
       <div
-        className={`fixed top-0 w-full z-50 transition-all ${
+        className={`${isHeroPage ? 'fixed' : 'sticky'} top-0 w-full z-50 transition-all ${
           isTransparent
             ? "bg-transparent"
             : "bg-white shadow border-b border-gray-200"

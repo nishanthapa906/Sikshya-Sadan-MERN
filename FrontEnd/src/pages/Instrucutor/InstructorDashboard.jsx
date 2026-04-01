@@ -4,222 +4,92 @@ import { instructorAPI } from '../../services/api';
 import { FaUsers, FaClipboardList, FaPlus, FaFileUpload, FaCheckSquare, FaBook, FaEdit, FaGraduationCap } from 'react-icons/fa';
 
 const InstructorDashboard = () => {
-    const [stats, setStats] = useState({
-        totalCourses: 0,
-        totalStudents: 0,
-        pendingSubmissions: 0
-    });
+    const [stats, setStats] = useState({ totalCourses: 0, totalStudents: 0, pendingSubmissions: 0 });
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [err, setErr] = useState(null);
 
     useEffect(() => {
-        fetchDashboard();
+        instructorAPI.getDashboard()
+            .then(res => { const d = res.data.data; setStats({ totalCourses: d.totalCourses || 0, totalStudents: d.totalStudents || 0, pendingSubmissions: d.pendingGrading || 0 }); setCourses(d.courses || []); })
+            .catch(() => setErr('Failed to load'))
+            .finally(() => setLoading(false));
     }, []);
 
-    const fetchDashboard = async () => {
-        try {
-            const response = await instructorAPI.getDashboard();
-            const data = response.data.data;
-            setStats({
-                totalCourses: data.totalCourses || 0,
-                totalStudents: data.totalStudents || 0,
-                pendingSubmissions: data.pendingGrading || 0
-            });
-            setCourses(data.courses || []);
-        } catch (error) {
-            console.error('Error fetching instructor dashboard:', error);
-            setError('Failed to load dashboard data.');
-        } finally {
-            setLoading(false);
-        }
-    };
+    if (loading) return <div style={{ padding: '2rem' }}>Loading...</div>;
+    if (err) return <div style={{ padding: '2rem', color: 'red' }}>{err}</div>;
 
-    if (loading) return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-10 w-10 border-2 border-slate-900 border-t-transparent"></div>
-        </div>
-    );
+    const actions = [
+        { to: '/instructor/assignments', icon: <FaPlus />, label: 'Create Assignment', desc: 'Add tasks for students' },
+        { to: '/instructor/grade-assignments', icon: <FaCheckSquare />, label: 'Grade Assignments', desc: 'Review submissions' },
+        { to: '/instructor/attendance', icon: <FaUsers />, label: 'Attendance', desc: 'Mark daily attendance' },
+        { to: '/instructor/resources', icon: <FaFileUpload />, label: 'Upload Resources', desc: 'Share study materials' },
+        { to: '/instructor/blogs', icon: <FaEdit />, label: 'Write Blogs', desc: 'Publish articles' },
+        { to: '/instructor/verify-completion', icon: <FaGraduationCap />, label: 'Verify Completion', desc: 'Issue certificates' },
+    ];
 
     return (
-        <div className="min-h-screen bg-slate-50 relative">
-            {/* Background design element */}
-            <div className="absolute top-0 left-0 w-full h-[350px] bg-slate-900 z-0"></div>
-
-            {/* Main Content Wrapper */}
-            <div className="relative z-10 pt-32 pb-24 max-w-7xl mx-auto px-6 lg:px-12">
-                
-                {/* Header Section */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
-                    <div className="text-white space-y-2">
-                        <h1 className="text-4xl font-bold tracking-tight">Instructor Dashboard</h1>
-                        <p className="text-slate-400 text-lg">Manage your courses, students, and grading.</p>
-                    </div>
-                    <Link
-                        to="/instructor/courses"
-                        className="inline-flex items-center gap-2 px-6 py-3.5 bg-white text-slate-900 text-sm font-bold rounded-xl hover:bg-slate-100 transition-colors shadow-lg"
-                    >
-                        <FaPlus size={12} /> Add Course
-                    </Link>
-                </div>
-
-                {error && (
-                    <div className="bg-red-50 text-red-600 p-6 rounded-2xl border border-red-200 text-sm mb-8 font-medium shadow-sm">
-                        {error}
-                    </div>
-                )}
-
-                {/* Metrics Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                    <div className="bg-white rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="h-12 w-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600">
-                                <FaBook size={20} />
-                            </div>
-                            <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Courses</p>
-                        </div>
-                        <p className="text-4xl font-black text-slate-900">{stats.totalCourses}</p>
-                        <p className="text-sm text-slate-500 mt-2 font-medium">Active courses</p>
-                    </div>
-
-                    <div className="bg-white rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="h-12 w-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600">
-                                <FaUsers size={20} />
-                            </div>
-                            <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Students</p>
-                        </div>
-                        <p className="text-4xl font-black text-slate-900">{stats.totalStudents}</p>
-                        <p className="text-sm text-slate-500 mt-2 font-medium">Enrolled students</p>
-                    </div>
-
-                    <div className="bg-slate-900 rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.1)] border border-slate-800 text-white">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="h-12 w-12 bg-amber-500/20 rounded-2xl flex items-center justify-center text-amber-400">
-                                <FaClipboardList size={20} />
-                            </div>
-                            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Pending</p>
-                        </div>
-                        <p className="text-4xl font-black text-white">{stats.pendingSubmissions}</p>
-                        <p className="text-sm text-slate-400 mt-2 font-medium">Assignments to grade</p>
-                    </div>
-                </div>
-
-                {/* Content Layout */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                    
-                    {/* Main Feed: Instructor Actions */}
-                    <div className="lg:col-span-2 space-y-8">
-                        <div>
-                            <h2 className="text-2xl font-bold text-slate-900 mb-6">Quick Actions</h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <Link to="/instructor/assignments" className="bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 hover:border-slate-300 hover:shadow-lg transition-all group">
-                                    <div className="flex justify-between items-start mb-6">
-                                        <div className="h-14 w-14 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-600 group-hover:bg-slate-900 group-hover:text-white transition-colors">
-                                            <FaPlus size={20} />
-                                        </div>
-                                    </div>
-                                    <h3 className="text-lg font-bold text-slate-900 mb-1">Create Assignment</h3>
-                                    <p className="text-sm text-slate-500 font-medium">Add new tasks for your students.</p>
-                                </Link>
-
-                                <Link to="/instructor/grade-assignments" className="bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 hover:border-emerald-300 hover:shadow-lg transition-all group">
-                                    <div className="flex justify-between items-start mb-6">
-                                        <div className="h-14 w-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-                                            <FaCheckSquare size={20} />
-                                        </div>
-                                    </div>
-                                    <h3 className="text-lg font-bold text-slate-900 mb-1">Grade Assignments</h3>
-                                    <p className="text-sm text-slate-500 font-medium">Review and mark student submissions.</p>
-                                </Link>
-
-                                <Link to="/instructor/attendance" className="bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 hover:border-blue-300 hover:shadow-lg transition-all group">
-                                    <div className="flex justify-between items-start mb-6">
-                                        <div className="h-14 w-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                                            <FaUsers size={20} />
-                                        </div>
-                                    </div>
-                                    <h3 className="text-lg font-bold text-slate-900 mb-1">Attendance</h3>
-                                    <p className="text-sm text-slate-500 font-medium">Mark daily student attendance.</p>
-                                </Link>
-
-                                <Link to="/instructor/resources" className="bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 hover:border-purple-300 hover:shadow-lg transition-all group">
-                                    <div className="flex justify-between items-start mb-6">
-                                        <div className="h-14 w-14 bg-purple-50 rounded-2xl flex items-center justify-center text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-colors">
-                                            <FaFileUpload size={20} />
-                                        </div>
-                                    </div>
-                                    <h3 className="text-lg font-bold text-slate-900 mb-1">Upload Resources</h3>
-                                    <p className="text-sm text-slate-500 font-medium">Share files and study materials.</p>
-                                </Link>
-
-                                <Link to="/instructor/blogs" className="bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 hover:border-indigo-300 hover:shadow-lg transition-all group">
-                                    <div className="flex justify-between items-start mb-6">
-                                        <div className="h-14 w-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                                            <FaEdit size={20} />
-                                        </div>
-                                    </div>
-                                    <h3 className="text-lg font-bold text-slate-900 mb-1">Write Blogs</h3>
-                                    <p className="text-sm text-slate-500 font-medium">Create and manage your published articles.</p>
-                                </Link>
-
-                                <Link to="/instructor/verify-completion" className="bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 hover:border-emerald-300 hover:shadow-lg transition-all group">
-                                    <div className="flex justify-between items-start mb-6">
-                                        <div className="h-14 w-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-                                            <FaGraduationCap size={20} />
-                                        </div>
-                                    </div>
-                                    <h3 className="text-lg font-bold text-slate-900 mb-1">Verify Completion</h3>
-                                    <p className="text-sm text-slate-500 font-medium">Mark students complete and upload certificates.</p>
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Sidebar: Course List */}
-                    <div className="space-y-8">
-                        <div className="flex justify-between items-center">
-                            <h2 className="text-2xl font-bold text-slate-900">Your Courses</h2>
-                            <Link to="/instructor/courses" className="text-sm font-bold text-indigo-600 hover:text-indigo-700">
-                                Manage all →
-                            </Link>
-                        </div>
-                        
-                        {courses.length > 0 ? (
-                            <div className="space-y-4">
-                                {courses.slice(0, 4).map(course => (
-                                    <Link key={course._id} to="/instructor/courses" className="block bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 hover:border-slate-300 hover:shadow-md transition-all group">
-                                        <h4 className="text-base font-bold text-slate-900 mb-3 group-hover:text-indigo-600 transition-colors">{course.title}</h4>
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-1.5">
-                                                <FaUsers size={12} className="text-slate-400" />
-                                                <span className="text-sm font-bold text-slate-700">{course.enrolledStudents || 0}</span>
-                                                <span className="text-xs text-slate-500 font-medium">students</span>
-                                            </div>
-                                            <span className="text-xs font-bold uppercase tracking-widest text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg">{course.category}</span>
-                                        </div>
-                                    </Link>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] text-center">
-                                <div className="h-16 w-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 mx-auto mb-4">
-                                    <FaBook size={24} />
-                                </div>
-                                <h3 className="text-lg font-bold text-slate-900 mb-1">No courses yet</h3>
-                                <p className="text-sm text-slate-500 font-medium mb-6">
-                                    You haven't created any courses.
-                                </p>
-                                <Link to="/instructor/courses" className="inline-flex px-6 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-indigo-600 transition-colors">
-                                    Create Course
-                                </Link>
-                            </div>
-                        )}
-                    </div>
-
-                </div>
-
+        <div style={{ padding: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h1 style={{ margin: 0 }}>Instructor Dashboard</h1>
+                <Link to="/instructor/courses" style={{ padding: '0.4rem 1rem', background: '#1e1b4b', color: '#fff', borderRadius: '8px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <FaPlus /> Add Course
+                </Link>
             </div>
+
+            {/* Stats */}
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '1.5rem' }}>
+                <thead>
+                    <tr style={{ background: '#f0f0f0' }}>
+                        <th style={{ padding: '0.75rem', textAlign: 'center' }}><FaBook /> Courses</th>
+                        <th style={{ padding: '0.75rem', textAlign: 'center' }}><FaUsers /> Students</th>
+                        <th style={{ padding: '0.75rem', textAlign: 'center' }}><FaClipboardList /> Pending</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style={{ padding: '0.75rem', textAlign: 'center', fontSize: '1.5rem', fontWeight: 'bold' }}>{stats.totalCourses}</td>
+                        <td style={{ padding: '0.75rem', textAlign: 'center', fontSize: '1.5rem', fontWeight: 'bold' }}>{stats.totalStudents}</td>
+                        <td style={{ padding: '0.75rem', textAlign: 'center', fontSize: '1.5rem', fontWeight: 'bold' }}>{stats.pendingSubmissions}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+                {actions.map(a => (
+                    <Link key={a.to} to={a.to} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '1rem', textDecoration: 'none', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <span style={{ fontSize: '1.25rem', color: '#6366f1' }}>{a.icon}</span>
+                        <div>
+                            <div style={{ fontWeight: 'bold' }}>{a.label}</div>
+                            <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{a.desc}</div>
+                        </div>
+                    </Link>
+                ))}
+            </div>
+
+            <h2>Your Courses</h2>
+            {courses.length === 0 ? (
+                <p>No courses yet. <Link to="/instructor/courses">Create one</Link></p>
+            ) : (
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                        <tr style={{ background: '#f0f0f0' }}>
+                            <th style={{ padding: '0.5rem', textAlign: 'left' }}>Title</th>
+                            <th style={{ padding: '0.5rem', textAlign: 'left' }}>Category</th>
+                            <th style={{ padding: '0.5rem', textAlign: 'left' }}>Students</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {courses.slice(0, 4).map(c => (
+                            <tr key={c._id} style={{ borderBottom: '1px solid #eee' }}>
+                                <td style={{ padding: '0.5rem' }}><Link to="/instructor/courses">{c.title}</Link></td>
+                                <td style={{ padding: '0.5rem' }}>{c.category}</td>
+                                <td style={{ padding: '0.5rem' }}>{c.enrolledStudents || 0}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            )}
         </div>
     );
 };

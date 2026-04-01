@@ -1,381 +1,93 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
 
-const baseUrl = "http://localhost:9000/api";
-const imageUrl = "http://localhost:9000/uploads";
+const base = "http://localhost:9000/api";
+const imgUrl = "http://localhost:9000/uploads";
 
 function Home() {
-  const [banners, setBanners] = useState([]);
-  const [stats, setStats] = useState(null);
-  const [courses, setCourses] = useState([]);
-  const [testimonials, setTestimonials] = useState([]);
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const [data, setData] = useState({ banners: [], stats: null, courses: [], tests: [] });
+  const [search, setSearch] = useState("");
+  const [load, setLoad] = useState(true);
+  const nav = useNavigate();
 
-  const navigate = useNavigate();
-
-  const getData = async () => {
+  const get = async () => {
     try {
-      setIsLoading(true);
-
-      const [bannerRes, statsRes, courseRes, testimonialRes] = await Promise.allSettled([
-        fetch(`${baseUrl}/banners`),
-        fetch(`${baseUrl}/stats`),
-        fetch(`${baseUrl}/courses?featured=true&limit=6`),
-        fetch(`${baseUrl}/public/testimonials`)
+      setLoad(true);
+      const [b, s, c, t] = await Promise.all([
+        fetch(`${base}/banners`).then(r=>r.json()).catch(()=>({})),
+        fetch(`${base}/stats`).then(r=>r.json()).catch(()=>({})),
+        fetch(`${base}/courses?featured=true&limit=6`).then(r=>r.json()).catch(()=>({})),
+        fetch(`${base}/public/testimonials`).then(r=>r.json()).catch(()=>({}))
       ]);
-
-      if (bannerRes.status === "fulfilled" && bannerRes.value.ok) {
-        const json = await bannerRes.value.json();
-        setBanners(json.data || []);
-      } else {
-        setBanners([]);
-      }
-
-      if (statsRes.status === "fulfilled" && statsRes.value.ok) {
-        const json = await statsRes.value.json();
-        setStats(json.data || null);
-      } else {
-        setStats(null);
-      }
-
-      if (courseRes.status === "fulfilled" && courseRes.value.ok) {
-        const json = await courseRes.value.json();
-        setCourses(json.courses || []);
-      } else {
-        setCourses([]);
-      }
-
-      if (testimonialRes.status === "fulfilled" && testimonialRes.value.ok) {
-        const json = await testimonialRes.value.json();
-        setTestimonials(json.data ? json.data.slice(0, 3) : []);
-      } else {
-        setTestimonials([]);
-      }
-
-      setIsLoading(false);
-    } catch (error) {
-      console.log(error);
-      setIsLoading(false);
-      toast.error("Failed to load data. Please refresh the page.");
-    }
+      setData({ banners: b.data || [], stats: s.data || null, courses: c.courses || [], tests: t.data?.slice(0,3) || [] });
+    } catch { alert("Failed to load"); } finally { setLoad(false); }
   };
+  useEffect(() => { get(); }, []);
 
-  useEffect(() => {
-    getData();
-  }, []);
-
-  // Auto slide banners every 6 seconds
-  useEffect(() => {
-    if (banners.length > 0) {
-      const timer = setInterval(() => {
-        setCurrentSlide((prev) => (prev + 1) % banners.length);
-      }, 6000);
-      return () => clearInterval(timer);
-    }
-  }, [banners]);
-
-  // Search submit
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) {
-      toast.warning("Please enter something to search!");
-      return;
-    }
-    navigate(`/courses?search=${searchQuery}`);
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <h1 className="text-2xl font-bold">Loading Sikshya Sadan...</h1>
-      </div>
-    );
-  }
+  const searchSubmit = (e) => { e.preventDefault(); if(search) nav(`/courses?search=${search}`); };
+  if (load) return <div className="p-8 text-center text-slate-500 font-bold">Loading Sikshya Sadan...</div>;
 
   return (
-    <main className="bg-gray-50 pb-20">
+    <div className="font-sans bg-slate-50 pb-12">
+      <div className="bg-indigo-900 text-white pt-32 pb-20 px-6 text-center">
+        <h1 className="text-4xl md:text-5xl font-black mb-4">Welcome to Sikshya Sadan</h1>
+        <p className="text-xl md:text-2xl opacity-90 mb-8">Empowering IT learners in Nepal</p>
+        <Link to="/courses" className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg font-bold transition-colors inline-block">Explore Courses</Link>
+      </div>
 
-      {/* ===== HERO BANNER ===== */}
-      <section className="relative h-[600px] bg-blue-900">
-        {banners.length > 0 ? (
-          banners.map((banner, index) => (
-            <div
-              key={banner._id}
-              className={`absolute inset-0 flex items-center transition-opacity duration-700 ${
-                index === currentSlide ? "opacity-100 z-10" : "opacity-0 z-0"
-              }`}
-              style={{
-                backgroundColor: banner.bgColor || "#1e3a8a",
-                backgroundImage: banner.bgImage ? `url(${imageUrl}/${banner.bgImage})` : "none",
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }}
-            >
-              {/* Dark overlay */}
-              <div className="absolute inset-0 bg-black/50"></div>
-
-              {/* Banner Content */}
-              <div className="relative z-20 w-[85%] m-auto text-white space-y-6">
-                {banner.badgeText && (
-                  <span className="bg-orange-500 text-white px-3 py-1 font-bold text-sm rounded-md">
-                    {banner.badgeText}
-                  </span>
-                )}
-                <h1 className="text-5xl font-bold md:w-[700px] leading-snug">
-                  {banner.heading}
-                </h1>
-                <p className="text-2xl text-gray-200 md:w-[600px]">
-                  {banner.subheading}
-                </p>
-                <div className="flex gap-4 pt-4">
-                  <Link
-                    to={banner.cta1Link || "/courses"}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-bold text-lg"
-                  >
-                    {banner.cta1Label}
-                  </Link>
-                  {banner.cta2Label && (
-                    <Link
-                      to={banner.cta2Link || "/contact"}
-                      className="border-2 border-white text-white px-8 py-3 rounded-lg font-bold text-lg hover:bg-white/10"
-                    >
-                      {banner.cta2Label}
-                    </Link>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))
-        ) : (
-          // Default banner if DB is empty
-          <div className="flex items-center justify-center h-full text-white text-center px-4">
-            <div className="space-y-4">
-              <h1 className="text-5xl font-bold">Welcome to Sikshya Sadan</h1>
-              <p className="text-2xl text-gray-200">Empowering IT learners in Nepal</p>
-              <Link
-                to="/courses"
-                className="inline-block bg-orange-500 text-white px-8 py-3 rounded-lg font-bold text-lg mt-4"
-              >
-                Explore Courses
-              </Link>
-            </div>
-          </div>
-        )}
-
-        {/* Slide Dots */}
-        <div className="absolute bottom-5 left-0 right-0 z-30 flex justify-center gap-3">
-          {banners.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentSlide(index)}
-              className={`h-3 rounded-full transition-all ${
-                index === currentSlide ? "w-10 bg-white" : "w-4 bg-gray-400"
-              }`}
-            />
-          ))}
-        </div>
-      </section>
-
-      {/* ===== SEARCH BOX ===== */}
-      <div className="w-[92%] md:w-[85%] m-auto -mt-10 z-40 relative bg-white p-4 md:p-6 shadow-md border border-gray-200 rounded-2xl">
-        <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-3 md:gap-4">
-          <input
-            type="text"
-            placeholder="Find a course..."
-            className="border border-gray-300 rounded-lg p-3 w-full text-lg outline-none bg-gray-100"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <button
-            type="submit"
-            className="bg-blue-600 text-white px-6 md:px-8 py-3 rounded-lg font-bold text-base md:text-lg hover:bg-blue-700"
-          >
-            SEARCH
-          </button>
+      <div className="max-w-3xl mx-auto -mt-8 relative z-10 bg-white p-6 rounded-xl shadow-lg border border-slate-100 mx-4 md:mx-auto">
+        <form onSubmit={searchSubmit} className="flex flex-col sm:flex-row gap-4">
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Find a course..." className="flex-1 p-4 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-lg font-bold transition-colors">Search</button>
         </form>
       </div>
 
-      {/* ===== STATS ===== */}
-      <section className="w-[92%] md:w-[85%] m-auto mt-20 bg-white p-6 md:p-10 border border-gray-200 shadow-sm grid grid-cols-2 lg:grid-cols-4 gap-6 rounded-2xl">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-800">{stats?.totalStudents ?? "N/A"}</h1>
-          <p className="text-lg font-semibold text-gray-500 uppercase mt-2">Enrolled Students</p>
-        </div>
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-800">{stats?.totalCourses ?? "N/A"}</h1>
-          <p className="text-lg font-semibold text-gray-500 uppercase mt-2">Global Courses</p>
-        </div>
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-800">{stats?.totalInstructors ?? "N/A"}</h1>
-          <p className="text-lg font-semibold text-gray-500 uppercase mt-2">Expert Instructors</p>
-        </div>
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-800">{stats?.totalEnrollments ?? "N/A"}</h1>
-          <p className="text-lg font-semibold text-gray-500 uppercase mt-2">Total Enrollments</p>
-        </div>
-      </section>
+      <div className="flex flex-wrap justify-center gap-12 my-20 px-6 text-center">
+        {[['Enrolled Students', data.stats?.totalStudents], ['Global Courses', data.stats?.totalCourses], ['Expert Instructors', data.stats?.totalInstructors], ['Total Enrollments', data.stats?.totalEnrollments]].map(([label, val]) => (
+           <div key={label} className="w-1/2 md:w-auto">
+             <h2 className="text-4xl md:text-5xl font-black text-slate-800 mb-2">{val || 'N/A'}</h2>
+             <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">{label}</p>
+           </div>
+        ))}
+      </div>
 
-      {/* ===== COURSES ===== */}
-      <section className="w-[92%] md:w-[85%] m-auto mt-20">
-        <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold">Top Rated Programs</h1>
-          <p className="text-xl text-gray-500 mt-2">Explore our most popular courses.</p>
-        </div>
+      <h2 className="text-center text-3xl font-black text-slate-800 mb-8">Top Rated Programs</h2>
+      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-6">
+        {data.courses.map(c => (
+           <div key={c._id} className="bg-white border border-slate-200 rounded-xl overflow-hidden hover:shadow-xl transition-shadow flex flex-col">
+             <img src={`${imgUrl}/${c.thumbnail}`} alt="" className="w-full h-48 object-cover" />
+             <div className="p-6 flex flex-col flex-1">
+               <h3 className="text-xl font-bold text-slate-800 mb-2">{c.title}</h3>
+               <div className="text-slate-500 text-sm mb-4">By {c.instructor?.name} | {c.skillLevel}</div>
+               <div className="flex justify-between items-center mt-auto pt-4 border-t border-slate-100">
+                 <span className="font-black text-xl text-indigo-600">Rs. {c.fee}</span>
+                 <Link to={`/courses/${c._id}`} className="bg-indigo-900 hover:bg-indigo-800 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors">Details</Link>
+               </div>
+             </div>
+           </div>
+        ))}
+      </div>
 
-        {courses.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {courses.map((course) => (
-              <div
-                key={course._id}
-                className="bg-white border border-gray-300 rounded-2xl shadow hover:shadow-lg transition overflow-hidden pb-4"
-              >
-                {/* Course Image */}
-                <div className="h-48 w-full bg-gray-200 relative">
-                  <img
-                    src={`${imageUrl}/${course.thumbnail}`}
-                    alt={course.title}
-                    className="w-full h-full object-cover"
-                  />
-                  <span className="absolute top-2 left-2 bg-blue-600 text-white px-2 py-1 text-sm font-bold rounded-md">
-                    {course.category}
-                  </span>
-                </div>
-
-                {/* Course Details */}
-                <div className="p-6 space-y-4">
-                  <div className="flex justify-between text-gray-500 font-semibold text-sm border-b pb-3">
-                    <span>⏱ {course.duration ?? "N/A"}</span>
-                    <span>⭐ {course.rating ?? "N/A"}</span>
-                  </div>
-
-                  <h1 className="text-xl font-bold line-clamp-2 h-14">{course.title}</h1>
-
-                  {/* Instructor */}
-                  <div className="flex items-center gap-3 bg-gray-50 rounded-lg p-3 border border-gray-200">
-                    <div className="w-10 h-10 bg-gray-300 rounded-full overflow-hidden flex items-center justify-center font-bold">
-                      {course.instructor?.avatar ? (
-                        <img
-                          src={`${imageUrl}/${course.instructor.avatar}`}
-                          className="w-full h-full object-cover"
-                          alt=""
-                        />
-                      ) : (
-                        course.instructor?.name?.charAt(0)
-                      )}
-                    </div>
-                    <div>
-                      <p className="font-bold">{course.instructor?.name}</p>
-                      <p className="text-sm text-gray-500">Instructor</p>
-                    </div>
-                  </div>
-
-                  {/* Price & Button */}
-                  <div className="flex justify-between items-center pt-3">
-                    <h1 className="text-2xl font-bold">Rs. {course.fee}</h1>
-                    <Link
-                      to={`/courses/${course._id}`}
-                      className="bg-orange-500 text-white font-bold px-4 py-2 rounded-md hover:bg-orange-600"
-                    >
-                      Details
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center p-10 bg-white rounded-2xl border font-bold text-gray-500">
-            No courses available.
-          </div>
-        )}
-
-        <div className="text-center mt-10">
-          <Link
-            to="/courses"
-            className="border-2 border-blue-600 text-blue-600 font-bold p-4 px-10 rounded-xl hover:bg-blue-600 hover:text-white transition inline-block"
-          >
-            EXPLORE ALL COURSES
-          </Link>
-        </div>
-      </section>
-
-      {/* ===== TESTIMONIALS ===== */}
-      <section className="w-[92%] md:w-[85%] m-auto mt-20 flex flex-col lg:flex-row gap-10">
-        {/* Left Text */}
-        <div className="w-full lg:w-[35%] space-y-6 flex flex-col justify-center">
-          <h1 className="text-4xl font-bold">Hear from our Alumni</h1>
-          <p className="text-xl text-gray-500">
-            Real stories from real learners who transformed their careers at Sikshya Sadan.
-          </p>
-          <Link
-            to="/about"
-            className="bg-blue-600 text-white font-bold w-44 p-4 rounded-xl flex justify-between items-center hover:bg-blue-700"
-          >
-            About Us →
-          </Link>
-        </div>
-
-        {/* Right Cards */}
-        <div className="w-full lg:w-[60%] grid md:grid-cols-2 gap-6">
-          {testimonials.length > 0 ? (
-            testimonials.map((t) => (
-              <div
-                key={t._id}
-                className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm flex-1 flex flex-col justify-between"
-              >
-                <div>
-                  <div className="text-orange-500 mb-4 font-bold">Rating: {t.rating ?? "N/A"}</div>
-                  <p className="text-gray-600 italic text-lg mb-6">"{t.comment}"</p>
-                </div>
-                <div className="flex items-center gap-4 border-t pt-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center font-bold text-blue-600 overflow-hidden">
-                    {t.avatar ? (
-                      <img src={`${imageUrl}/${t.avatar}`} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      t.name?.charAt(0)
-                    )}
-                  </div>
-                  <div>
-                    <h1 className="font-bold text-lg">{t.name}</h1>
-                    <p className="text-sm text-gray-500">{t.role}</p>
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="p-10 border rounded-2xl bg-white w-full text-center text-gray-500">
-              No testimonials yet.
+      <h2 className="text-center text-3xl font-black text-slate-800 mt-24 mb-10">Alumni Stories</h2>
+      <div className="max-w-5xl mx-auto flex flex-wrap gap-8 px-6 justify-center">
+         {data.tests.map(t => (
+            <div key={t._id} className="flex-1 min-w-[300px] bg-white p-8 rounded-xl border border-slate-200 shadow-sm relative flex flex-col items-center text-center">
+               <span className="absolute top-4 right-4 text-4xl text-slate-200 font-serif">"</span>
+               <div className="w-20 h-20 rounded-full bg-slate-100 overflow-hidden mb-4 border-4 border-white shadow-sm flex items-center justify-center text-indigo-300 font-black text-2xl">
+                  {t.image || t.student?.avatar ? <img src={`${imgUrl}/${t.image || t.student?.avatar}`} alt="" className="w-full h-full object-cover" /> : t.name?.charAt(0)}
+               </div>
+               <p className="italic text-slate-600 mb-6 relative z-10 leading-relaxed">"{t.comment}"</p>
+               <div className="font-bold text-slate-800 mt-auto">{t.name}</div>
+               <div className="text-indigo-500 font-medium text-xs uppercase tracking-widest mt-1">{t.role}</div>
             </div>
-          )}
-        </div>
-      </section>
+         ))}
+      </div>
 
-      {/* ===== CALL TO ACTION ===== */}
-      <section className="w-[92%] md:w-[85%] m-auto mt-20 rounded-3xl bg-blue-900 p-8 md:p-16 text-center text-white space-y-6">
-        <h1 className="text-4xl font-bold">Your Future in Tech Begins Here.</h1>
-        <p className="text-xl text-gray-300 md:w-[600px] m-auto">
-          Join our community of developers and innovators. Enroll today and get access to premium resources and mentorship.
-        </p>
-        <div className="flex flex-col md:flex-row justify-center gap-4 md:gap-6 pt-4">
-          <Link
-            to="/admission"
-            className="bg-orange-500 text-white font-bold p-4 px-10 rounded-xl hover:bg-orange-600"
-          >
-            Apply for Admission
-          </Link>
-          <Link
-            to="/contact"
-            className="border-2 border-white text-white font-bold p-4 px-10 rounded-xl hover:bg-white/10"
-          >
-            Contact Us
-          </Link>
-        </div>
-      </section>
-
-    </main>
+      <div className="bg-indigo-900 text-white text-center py-20 px-6 mt-24">
+         <h2 className="text-3xl md:text-4xl font-black mb-8">Your Future in Tech Begins Here.</h2>
+         <Link to="/admission" className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-xl font-bold text-lg transition-transform hover:scale-105 inline-block">Apply for Admission</Link>
+      </div>
+    </div>
   );
 }
 

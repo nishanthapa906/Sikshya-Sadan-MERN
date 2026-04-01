@@ -61,8 +61,8 @@ import TestimonialsManagement from '../pages/admin/TestimonialsManagement';
 const ProtectedRoute = ({ children, allowedRoles }) => {
     const { user, loading } = useAuth();
     if (loading) return (
-        <div className="loading-container">
-            <div className="spinner"></div>
+        <div className="flex justify-center items-center min-h-[60vh]">
+            <div className="w-12 h-12 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
         </div>
     );
     if (!user) return <Navigate to="/login" replace />;

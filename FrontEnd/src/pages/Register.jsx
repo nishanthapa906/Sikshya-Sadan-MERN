@@ -1,159 +1,64 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
 
 function Register() {
   const { register } = useAuth();
-  const navigate = useNavigate();
+  const nav = useNavigate();
+  const [form, setForm] = useState({ name: "", email: "", phone: "", pw: "", cpw: "", avatar: null });
+  const [loading, setLoad] = useState(false);
 
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [avatar, setAvatar] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleRegister = async (e) => {
+  const submit = async (e) => {
     e.preventDefault();
-
-    // Check passwords match
-    if (password !== confirmPassword) {
-      toast.error("Passwords do not match!");
-      return;
-    }
-
-    setIsLoading(true);
-
-    let result;
-    if (avatar) {
-      const data = new FormData();
-      data.append("name", name);
-      data.append("email", email);
-      data.append("phone", phone);
-      data.append("password", password);
-      data.append("role", "student");
-      data.append("avatar", avatar);
-      result = await register(data);
+    if (form.pw !== form.cpw) return alert("Passwords mismatch");
+    setLoad(true);
+    let res;
+    if (form.avatar) {
+      const fd = new FormData();
+      fd.append("name", form.name); fd.append("email", form.email); fd.append("phone", form.phone);
+      fd.append("password", form.pw); fd.append("role", "student"); fd.append("avatar", form.avatar);
+      res = await register(fd);
     } else {
-      // For no-avatar signup, send JSON payload for simpler backend parsing.
-      result = await register({ name, email, phone, password, role: "student" });
+      res = await register({ name: form.name, email: form.email, phone: form.phone, password: form.pw, role: "student" });
     }
-
-    if (result.success) {
-      toast.success("Account created! Welcome 🎉");
-      navigate("/student/dashboard");
-    } else {
-      toast.error(result.message || "Registration failed!");
-      setIsLoading(false);
-    }
+    if (res.success) nav("/student/dashboard");
+    else { alert(res.message || "Failed to register"); setLoad(false); }
   };
 
   return (
-    <main className="mt-20 mb-20 m-auto w-[65%] min-w-[300px] flex justify-center bg-white shadow-lg shadow-gray-300 rounded-lg p-10">
-      <div className="w-full space-y-5">
-
-        {/* Heading */}
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-bold">Sikshya Sadan Register</h1>
-          <p className="text-xl text-gray-500 mt-2">Create an account to get started.</p>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleRegister} className="space-y-6">
-
-          <div className="flex flex-col gap-y-2 text-xl">
-            <label className="font-semibold">Full Name</label>
-            <input
-              type="text"
-              required
-              placeholder="Your full name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="border p-3 rounded-md outline-none focus:border-blue-500"
-            />
+    <div className="flex justify-center items-center min-h-[80vh] px-4 font-sans py-12 bg-slate-50">
+      <div className="w-full max-w-lg bg-white p-8 md:p-10 rounded-2xl shadow-sm border border-slate-200">
+        <h1 className="text-3xl font-black text-center text-slate-800 mb-8">Create Account</h1>
+        <form onSubmit={submit} className="space-y-5">
+          {['name', 'email', 'phone'].map(f => (
+            <div key={f}>
+              <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">{f}</label>
+              <input type={f==='email'?'email':'text'} required value={form[f]} onChange={e => setForm({...form, [f]: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-slate-800" />
+            </div>
+          ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Password</label>
+              <input type="password" required value={form.pw} onChange={e => setForm({...form, pw: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-slate-800" />
+            </div>
+            <div>
+              <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Confirm</label>
+              <input type="password" required value={form.cpw} onChange={e => setForm({...form, cpw: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-slate-800" />
+            </div>
           </div>
-
-          <div className="flex flex-col gap-y-2 text-xl">
-            <label className="font-semibold">Phone Number</label>
-            <input
-              type="text"
-              required
-              placeholder="98XXXXXXXX"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="border p-3 rounded-md outline-none focus:border-blue-500"
-            />
+          <div>
+            <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Profile Photo (Optional)</label>
+            <input type="file" onChange={e => setForm({...form, avatar: e.target.files[0]})} className="w-full p-2 text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer" />
           </div>
-
-          <div className="flex flex-col gap-y-2 text-xl">
-            <label className="font-semibold">Profile Photo (optional)</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setAvatar(e.target.files?.[0] || null)}
-              className="border p-3 rounded-md outline-none focus:border-blue-500"
-            />
-          </div>
-
-          <div className="flex flex-col gap-y-2 text-xl">
-            <label className="font-semibold">Email Address</label>
-            <input
-              type="email"
-              required
-              placeholder="your@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="border p-3 rounded-md outline-none focus:border-blue-500"
-            />
-          </div>
-
-          <div className="flex flex-col gap-y-2 text-xl">
-            <label className="font-semibold">Password</label>
-            <input
-              type="password"
-              required
-              placeholder="Enter password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="border p-3 rounded-md outline-none focus:border-blue-500"
-            />
-          </div>
-
-          <div className="flex flex-col gap-y-2 text-xl">
-            <label className="font-semibold">Confirm Password</label>
-            <input
-              type="password"
-              required
-              placeholder="Confirm password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="border p-3 rounded-md outline-none focus:border-blue-500"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="bg-blue-600 hover:bg-blue-700 p-4 text-white text-xl font-bold w-full rounded-md mt-5"
-          >
-            {isLoading ? "Creating Account..." : "Sign Up"}
+          <button type="submit" disabled={loading} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition-colors disabled:opacity-50 mt-6">
+            {loading ? "Creating Account..." : "Sign Up"}
           </button>
         </form>
-
-        {/* Login link */}
-        <div className="text-center text-lg mt-8">
-          <p>
-            Already have an account?{" "}
-            <Link to="/login" className="text-blue-600 font-bold hover:underline">
-              Login Here
-            </Link>
-          </p>
+        <div className="text-center mt-8 text-sm font-medium text-slate-500">
+          Already have an account? <Link to="/login" className="text-indigo-600 font-bold hover:underline">Sign In</Link>
         </div>
-
       </div>
-    </main>
+    </div>
   );
 }
 
