@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import mongoose from "mongoose";
 import connectDb from "./src/db/connect.js";
 import authRouter from "./src/routes/authRoutes.js";
 import courseRouter from "./src/routes/courseRoutes.js";
@@ -23,6 +24,14 @@ const uploadPath = isProd ? "/tmp" : "./public/Images";
 // Connect to DB and handle initial errors
 connectDb().catch(err => {
     console.error("CRITICAL: Failed to connect to database during startup:", err.message);
+});
+
+// Serverless-aware DB Connection Middleware
+app.use(async (req, res, next) => {
+    if (mongoose.connection.readyState !== 1) {
+        await connectDb();
+    }
+    next();
 });
 
 app.use(express.json());
