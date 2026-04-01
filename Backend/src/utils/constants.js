@@ -3,7 +3,11 @@ dotenv.config();
 
 export const JWT_SECRET = process.env.JWT_SECRET || 'sikshya_sadan_secret_key_2024';
 export const JWT_EXPIRE = process.env.JWT_EXPIRE || '7d';
-export const MONGODB_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/SIKSHYA-sadan-db';
+export const MONGODB_URI = process.env.MONGO_URI;
+
+if (!MONGODB_URI && process.env.NODE_ENV === 'production') {
+    console.error("CRITICAL: MONGO_URI is not defined in production environment variables!");
+}
 
 export const ESEWA_MERCHANT_ID = process.env.ESEWA_MERCHANT_ID || 'EPAYTEST';
 export const ESEWA_SECRET_KEY = process.env.ESEWA_SECRET_KEY || '8gBm/:&EnhH.1/q';
