@@ -2,10 +2,17 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
-// Ensure upload directory exists
-const uploadDir = './public/Images';
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
+// Vercel's read-only filesystem only allows writing to /tmp
+const isProd = process.env.NODE_ENV === 'production';
+const uploadDir = isProd ? '/tmp' : './public/Images';
+
+// Only try creating directory if NOT in production
+if (!isProd && !fs.existsSync(uploadDir)) {
+    try {
+        fs.mkdirSync(uploadDir, { recursive: true });
+    } catch (e) {
+        console.log("Upload directory already exists or handled by serverless environment.");
+    }
 }
 
 // Set storage engine
@@ -24,23 +31,16 @@ const storage = multer.diskStorage({
 // File filter - allow images, PDFs, DOCX, and other common types
 const fileFilter = (req, file, cb) => {
     const allowedTypes = [
-        'image/jpeg',
-        'image/jpg',
-        'image/png',
-        'image/gif',
-        'image/webp',
-        'application/pdf',
-        'application/msword',
+        'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+        'application/pdf', 'application/msword', 
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'video/mp4',
-        'video/webm',
-        'application/zip'
+        'video/mp4', 'video/webm', 'application/zip'
     ];
 
     if (allowedTypes.includes(file.mimetype)) {
         cb(null, true);
     } else {
-        cb(null, true); // Accept all for flexibility - per project needs
+        cb(null, true); // Accept all for flexibility during test
     }
 };
 

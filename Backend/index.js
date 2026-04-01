@@ -10,18 +10,27 @@ import adminRouter from "./src/routes/adminRoutes.js";
 import enrollmentRouter from "./src/routes/enrollmentRoutes.js";
 import paymentRouter from "./src/routes/paymentRoutes.js";
 import statsRouter from "./src/routes/statsRoutes.js";
-import blogRouter from "./src/routes/blogRoutes.js";
+import blogRouter from "./src/routes/blogRoutes.js"; 
 import jobRouter from "./src/routes/jobRoutes.js";
 import assignmentRouter from "./src/routes/assignmentRoutes.js";
 import publicRouter from "./src/routes/publicRoutes.js";
 
 const app = express();
-connectDb();
+
+const isProd = process.env.NODE_ENV === "production";
+const uploadPath = isProd ? "/tmp" : "./public/Images";
+
+// Connect to DB and handle initial errors
+connectDb().catch(err => {
+    console.error("CRITICAL: Failed to connect to database during startup:", err.message);
+});
 
 app.use(express.json());
 app.use(cors({ origin: true, credentials: true }));
 app.use(cookieParser());
-app.use("/uploads", express.static('./public/Images'));
+
+// Serve static images from correct folder depending on environment
+app.use("/uploads", express.static(uploadPath));
 
 app.use("/api/auth", authRouter);
 app.use("/api/courses", courseRouter);
@@ -36,7 +45,16 @@ app.use("/api/blogs", blogRouter);
 app.use("/api/jobs", jobRouter);
 app.use("/api/public", publicRouter);
 
-app.get("/", (req, res) => res.json({ success: true, message: "App running!" }));
-app.listen(9000, () => console.log("Server running on port 9000"));
+app.get("/", (req, res) => res.json({ 
+    success: true, 
+    message: "Sikshya Sadan API is live!",
+    env: process.env.NODE_ENV,
+    dbStatus: "Connecting..."
+}));
+
+// Only listen locally, NOT on Vercel
+if (!isProd) {
+    app.listen(9000, () => console.log("Server running locally on port 9000"));
+}
 
 export default app;
