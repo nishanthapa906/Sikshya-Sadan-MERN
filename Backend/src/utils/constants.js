@@ -1,24 +1,12 @@
 import dotenv from 'dotenv';
-
-// Only load .env if not in production or for local testing
-const isProd = process.env.NODE_ENV === 'production';
-if (!isProd) {
-    dotenv.config();
-} else {
-    // In production, we can still call it but quieter, though Vercel injects natively
-    dotenv.config({ quiet: true });
-}
+dotenv.config();
 
 export const JWT_SECRET = process.env.JWT_SECRET || 'sikshya_sadan_secret_key_2024';
 export const JWT_EXPIRE = process.env.JWT_EXPIRE || '7d';
 
-// Support both common names
+// Fallback is good for consistency across environments
 export const MONGODB_URI = process.env.MONGO_URI || process.env.MONGODB_URI;
 
-if (!MONGODB_URI && isProd) {
-    console.error("CRITICAL ERROR: Neither MONGO_URI nor MONGODB_URI is defined in production environment variables!");
-    console.log("Current process.env keys:", Object.keys(process.env).filter(k => !k.includes('SECRET') && !k.includes('KEY')));
-}
 
 
 export const ESEWA_MERCHANT_ID = process.env.ESEWA_MERCHANT_ID || 'EPAYTEST';

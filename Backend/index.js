@@ -26,22 +26,16 @@ connectDb().catch(err => {
     console.error("CRITICAL: Failed to connect to database during startup:", err.message);
 });
 
-// Serverless-aware DB Connection Middleware
+// Database Connection Middleware
 app.use(async (req, res, next) => {
     try {
-        if (mongoose.connection.readyState !== 1) {
-            await connectDb();
-        }
+        await connectDb();
         next();
     } catch (err) {
-        console.error("DATABASE CONNECTION ERROR:", err.message);
-        res.status(503).json({ 
-            success: false, 
-            message: "Database connection failed. Please try again later.",
-            error: isProd ? undefined : err.message
-        });
+        res.status(503).json({ success: false, message: "Database Connection Error" });
     }
 });
+
 
 
 app.use(express.json());
