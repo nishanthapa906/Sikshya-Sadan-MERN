@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-const base = "http://localhost:9000/api";
-const imgUrl = "http://localhost:9000/uploads";
+import { BASE_URL as base, UPLOAD_URL as imgUrl } from "../services/api";
 
 function Home() {
   const [data, setData] = useState({ banners: [], stats: null, courses: [], tests: [] });

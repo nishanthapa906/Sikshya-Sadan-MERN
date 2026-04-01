@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-// Base URL - change this to your backend URL
-export const BASE_URL = 'http://localhost:9000/api';
-export const UPLOAD_URL = 'http://localhost:9000/uploads';
+// Base URL - Use environment variables for Vercel deployment
+export const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:9000/api';
+export const UPLOAD_URL = import.meta.env.VITE_UPLOAD_URL || 'http://localhost:9000/uploads';
 
 const api = axios.create({
     baseURL: BASE_URL
@@ -68,7 +68,6 @@ export const studentAPI = {
     getMyAssignments: () => api.get('/assignments/student/assignments'),
     submitAssignment: (assignmentId, data) => api.post(`/assignments/student/assignments/${assignmentId}/submit`, data),
     getMyCertificates: () => api.get('/assignments/student/certificates'),
-    claimCertificate: (courseId) => api.post(`/assignments/student/${courseId}/claim-certificate`),
     isEnrolled: (courseId) => api.get(`/student/is-enrolled/${courseId}`),
     getEnrollmentDetails: (id) => api.get(`/enrollments/${id}`),
     updateProgress: (id, progress) => api.put(`/enrollments/${id}/progress`, { progress })

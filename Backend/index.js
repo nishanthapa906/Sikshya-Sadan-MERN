@@ -37,5 +37,6 @@ app.use("/api/jobs", jobRouter);
 app.use("/api/public", publicRouter);
 
 app.get("/", (req, res) => res.json({ success: true, message: "App running!" }));
-
 app.listen(9000, () => console.log("Server running on port 9000"));
+
+export default app;

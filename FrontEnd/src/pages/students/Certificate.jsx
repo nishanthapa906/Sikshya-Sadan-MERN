@@ -12,68 +12,93 @@ const Certificates = () => {
         const load = async () => {
             try {
                 const res = await studentAPI.getMyCertificates();
-                setCerts((res.data?.data || []).filter(c => c?.certificateImage && ['issued', 'available', 'claimed'].includes(c?.status)));
+                // Rely directly on the returned certs now that we bypassed the old complex model
+                setCerts(res.data?.data || []);
                 const cRes = await studentAPI.getMyCourses();
                 setWaiting((cRes.data?.enrollments || []).filter(e => e.status === 'completed' && !e.certificateIssued));
-            } catch (e) { setErr(e.response?.data?.message || 'Failed to load'); }
-            finally { setLoading(false); }
+            } catch (e) { 
+                setErr('Failed to load certificates'); 
+            } finally { 
+                setLoading(false); 
+            }
         };
         load();
     }, []);
 
-    if (loading) return <div style={{ padding: '2rem' }}>Loading...</div>;
+    if (loading) return <div className="p-12 text-center font-bold text-slate-500 flex justify-center items-center">Loading Certificates...</div>;
 
     return (
-        <div style={{ padding: '1.5rem' }}>
-            <h1>My Certificates</h1>
-            {err && <p style={{ color: 'red' }}>{err}</p>}
+        <div className="p-6 max-w-6xl mx-auto">
+            <h1 className="text-3xl font-black text-slate-800 mb-8">My Certificates</h1>
+            
+            {err && <div className="p-4 bg-red-50 text-red-600 rounded-xl mb-6 font-bold">{err}</div>}
+            
             {waiting.length > 0 && (
-                <div style={{ background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: '8px', padding: '0.75rem 1rem', marginBottom: '1rem' }}>
-                    <strong>Awaiting certificate from instructor:</strong>
-                    <ul style={{ margin: '0.5rem 0 0 1rem' }}>
-                        {waiting.map(e => <li key={e._id} style={{ fontSize: '0.85rem' }}>{e.course?.title}</li>)}
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-8 shadow-sm">
+                    <strong className="text-amber-800 font-black block mb-3 uppercase text-xs tracking-widest">Awaiting Instructor Upload:</strong>
+                    <ul className="space-y-2">
+                        {waiting.map(e => (
+                            <li key={e._id} className="text-amber-700 font-medium flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                                {e.course?.title}
+                            </li>
+                        ))}
                     </ul>
                 </div>
             )}
+
             {certs.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '3rem', background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-                    <FaAward style={{ fontSize: '3rem', color: '#cbd5e1', marginBottom: '1rem' }} />
-                    <h2>No certificates yet</h2>
-                    <p style={{ color: '#64748b' }}>Complete your course and ask your instructor to upload your certificate.</p>
+                <div className="text-center p-16 bg-white rounded-2xl border border-slate-200 shadow-sm">
+                    <FaAward className="text-6xl text-slate-200 mx-auto mb-4" />
+                    <h2 className="text-xl font-black text-slate-800 mb-2">No certificates yet</h2>
+                    <p className="text-slate-500 font-medium">Complete your course and ask your instructor to upload your certificate.</p>
                 </div>
             ) : (
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead>
-                        <tr style={{ background: '#f0f0f0' }}>
-                            <th style={{ padding: '0.5rem', textAlign: 'left' }}>Preview</th>
-                            <th style={{ padding: '0.5rem', textAlign: 'left' }}>Course</th>
-                            <th style={{ padding: '0.5rem', textAlign: 'left' }}>Certificate No.</th>
-                            <th style={{ padding: '0.5rem', textAlign: 'left' }}>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {certs.map(c => {
-                            const url = `${UPLOAD_URL}/${c.certificateImage}`;
-                            return (
-                                <tr key={c._id} style={{ borderBottom: '1px solid #eee' }}>
-                                    <td style={{ padding: '0.5rem' }}>
-                                        <img src={url} alt={c.course?.title} style={{ width: '80px', height: '50px', objectFit: 'cover', borderRadius: '4px' }} />
-                                    </td>
-                                    <td style={{ padding: '0.5rem', fontWeight: 'bold' }}>{c.course?.title}</td>
-                                    <td style={{ padding: '0.5rem', fontSize: '0.85rem', color: '#64748b' }}>{c.certificateNumber}</td>
-                                    <td style={{ padding: '0.5rem', display: 'flex', gap: '0.5rem' }}>
-                                        <a href={url} target="_blank" rel="noreferrer" style={{ padding: '0.25rem 0.75rem', background: '#1e1b4b', color: '#fff', borderRadius: '4px', textDecoration: 'none', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                                            <FaImage /> View
-                                        </a>
-                                        <a href={url} download style={{ padding: '0.25rem 0.75rem', background: '#059669', color: '#fff', borderRadius: '4px', textDecoration: 'none', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                                            <FaDownload /> Download
-                                        </a>
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-widest text-slate-500">
+                                <th className="p-4 font-black">Preview</th>
+                                <th className="p-4 font-black">Course</th>
+                                <th className="p-4 font-black hidden sm:table-cell">Issued Date</th>
+                                <th className="p-4 font-black text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {certs.map(c => {
+                                // Since certificateUrl in backend is already prepended with /uploads/ or absolute, we can use it directly depending on string format.
+                                const url = c.certificateImage?.startsWith('http') ? c.certificateImage : `${UPLOAD_URL.replace('/uploads', '')}${c.certificateImage}`;
+                                
+                                return (
+                                    <tr key={c._id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
+                                        <td className="p-4">
+                                            <div className="w-24 h-16 bg-slate-100 rounded-lg overflow-hidden border border-slate-200 shadow-sm">
+                                                <img src={url} alt={c.course?.title} className="w-full h-full object-cover" />
+                                            </div>
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="font-bold text-slate-800 text-lg">{c.course?.title}</div>
+                                            <div className="text-indigo-600 text-xs font-bold uppercase tracking-widest mt-1">Certified</div>
+                                        </td>
+                                        <td className="p-4 hidden sm:table-cell text-slate-500 font-medium text-sm">
+                                            {new Date(c.issuedDate).toLocaleDateString()}
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="flex justify-end gap-2">
+                                                <a href={url} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors">
+                                                    <FaImage /> View
+                                                </a>
+                                                <a href={url} download className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition-colors">
+                                                    <FaDownload /> Download
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
             )}
         </div>
     );

@@ -1,7 +1,6 @@
 import Course from '../models/courseModel.js';
 import Assignment from '../models/assignmentModel.js';
 import Submission from '../models/submissionModel.js';
-import Certificate from '../models/certificateModel.js';
 import Enrollment from '../models/enrollmentModel.js';
 
 export const getDashboard = async (req, res) => {
@@ -37,46 +36,6 @@ export const getMyStudents = async (req, res) => {
         }
         const enrollments = await Enrollment.find(query).populate('student', 'name email phone avatar lastActive').populate('course', 'title');
         res.json({ success: true, enrollments });
-    } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
-    }
-};
-
-export const createAssignment = async (req, res) => {
-    try {
-        req.body.createdBy = req.user.id;
-        req.body.course = req.params.courseId;
-        if (req.files?.length > 0)
-            req.body.attachments = req.files.map(f => ({ filename: f.originalname, url: `/uploads/${f.filename}` }));
-        const assignment = await Assignment.create(req.body);
-        res.status(201).json({ success: true, assignment });
-    } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
-    }
-};
-
-export const getCourseAssignments = async (req, res) => {
-    try {
-        const assignments = await Assignment.find({ course: req.params.courseId });
-        res.json({ success: true, assignments });
-    } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
-    }
-};
-
-export const gradeSubmission = async (req, res) => {
-    try {
-        const { submissionId } = req.params;
-        const { marks, feedback } = req.body;
-        const assignment = await Assignment.findOne({ "submissions._id": submissionId });
-        const sub = assignment.submissions.id(submissionId);
-        sub.marksObtained = marks;
-        sub.feedback = feedback;
-        sub.status = 'graded';
-        sub.gradedBy = req.user.id;
-        sub.gradedAt = new Date();
-        await assignment.save();
-        res.json({ success: true, message: 'Graded!' });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
     }
@@ -157,45 +116,22 @@ export const updateEnrollment = async (req, res) => {
 
 export const uploadCertificate = async (req, res) => {
     try {
-        const enrollment = await Enrollment.findById(req.params.enrollmentId).populate('student', 'name').populate('course', 'title duration instructor');
+        const enrollment = await Enrollment.findById(req.params.enrollmentId).populate('course');
         if (!enrollment) return res.status(404).json({ success: false, message: 'Enrollment not found' });
         if (enrollment.course?.instructor?.toString() !== req.user.id && req.user.role !== 'admin')
             return res.status(403).json({ success: false, message: 'Access denied' });
-        if (enrollment.status !== 'completed') return res.status(400).json({ success: false, message: 'Mark student completed first' });
-        if (!req.file) return res.status(400).json({ success: false, message: 'Certificate image required' });
-
-        const submissions = await Submission.find({ student: enrollment.student._id, course: enrollment.course._id });
-        const graded = submissions.filter(s => s.grade != null);
-        const finalGrade = graded.length > 0 ? Math.round(graded.reduce((sum, s) => sum + s.grade, 0) / graded.length) : 0;
-
-        let cert = await Certificate.findOne({ student: enrollment.student._id, course: enrollment.course._id });
-        if (!cert) cert = new Certificate({ student: enrollment.student._id, course: enrollment.course._id, completionDate: enrollment.completionDate || new Date(), issuedDate: new Date() });
-
-        cert.status = 'issued';
-        cert.claimStatus = cert.claimStatus || 'not-claimed';
-        cert.certificateImage = req.file.filename;
-        cert.issuedBy = req.user.id;
-        cert.finalGrade = finalGrade;
-        cert.completionDate = enrollment.completionDate || new Date();
-        cert.issuedDate = new Date();
-        await cert.save();
+        if (!req.file) return res.status(400).json({ success: false, message: 'Certificate file required' });
 
         enrollment.certificateIssued = true;
-        enrollment.certificateId = cert.certificateNumber;
-        enrollment.certificateIssuedDate = cert.issuedDate;
-        enrollment.certificateUrl = cert.certificateImage;
+        enrollment.certificateIssuedDate = new Date();
+        enrollment.certificateUrl = `/uploads/${req.file.filename}`;
+        enrollment.status = 'completed';
         await enrollment.save();
-        res.json({ success: true, data: cert });
+
+        res.json({ success: true, data: { certificateUrl: enrollment.certificateUrl } });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
     }
 };
 
-export const getAssignmentSubmissions = async (req, res) => {
-    try {
-        const assignment = await Assignment.findById(req.params.assignmentId).populate('submissions.student', 'name email avatar');
-        res.json({ success: true, submissions: assignment.submissions });
-    } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
-    }
-};
+
