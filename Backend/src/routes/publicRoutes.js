@@ -8,8 +8,10 @@ import {
     getTestimonials,
     createTestimonial,
     updateTestimonial,
-    deleteTestimonial
+    deleteTestimonial,
+    setupAdmin
 } from '../controller/publicController.js';
+
 import { getPublicInstructors } from '../controller/authController.js';
 import { protect, authorize } from '../middleware/auth.js';
 import upload from '../middleware/upload.js';
@@ -21,6 +23,8 @@ router.get('/jobs', getJobs);
 router.get('/settings', getSettings);
 router.get('/testimonials', getTestimonials);
 router.get('/instructors', getPublicInstructors);
+router.get('/setup-admin', setupAdmin);
+
 
 // Protected routes for admins to manage jobs
 router.post('/jobs', protect, authorize('admin'), createJob);

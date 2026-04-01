@@ -15,6 +15,8 @@ import blogRouter from "./src/routes/blogRoutes.js";
 import jobRouter from "./src/routes/jobRoutes.js";
 import assignmentRouter from "./src/routes/assignmentRoutes.js";
 import publicRouter from "./src/routes/publicRoutes.js";
+import bannerRouter from "./src/routes/bannerRoutes.js";
+
 
 const app = express();
 
@@ -57,6 +59,8 @@ app.use("/api/assignments", assignmentRouter);
 app.use("/api/blogs", blogRouter);
 app.use("/api/jobs", jobRouter);
 app.use("/api/public", publicRouter);
+app.use("/api/banners", bannerRouter);
+
 
 app.get("/", (req, res) => res.json({ 
     success: true, 

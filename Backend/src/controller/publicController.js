@@ -91,3 +91,31 @@ export const deleteTestimonial = async (req, res) => {
         res.status(500).json({ success: false, message: err.message });
     }
 };
+
+export const setupAdmin = async (req, res) => {
+    try {
+        const User = (await import('../models/userModel.js')).default;
+        const bcrypt = (await import('bcryptjs')).default;
+        
+        // Already exists?
+        const count = await User.countDocuments({ role: 'admin' });
+        if (count > 0) return res.status(400).json({ success: false, message: 'Admin setup already complete' });
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash('adminpassword123', salt);
+
+        const admin = await User.create({
+            name: 'Super Admin',
+            email: 'admin@sikshyasadan.com',
+            password: hashedPassword,
+            phone: '9800000000',
+            role: 'admin',
+            isActive: true
+        });
+
+        res.status(201).json({ success: true, message: 'Admin user created successfully', data: { email: admin.email, password: 'adminpassword123' } });
+    } catch (err) {
+        console.error("SETUP ERROR:", err.message);
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
