@@ -30,8 +30,8 @@ import About from '../pages/About';
 // import VerifyCompletion from '../pages/VerifyCompletion';
 
 // Admin Portal Pages
- import AdminDashboard from '../pages/Admin/AdminDashboard';
-import Users from '../pages/Admin/Users';
+ import AdminDashboard from '../pages/admin/AdminDashboard';
+import Users from '../pages/admin/Users';
 import StudentDashboard from '../pages/students/StudentDashboard';
 import CourseDetail from '../pages/courses/CourseDetail';
 import Courses from '../pages/courses/Courses';
