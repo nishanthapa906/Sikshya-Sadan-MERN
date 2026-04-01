@@ -13,6 +13,7 @@ export const getJobs = async (req, res) => {
         const types = await Job.distinct('type', { isActive: true });
         res.json({ success: true, data: { jobs, types } });
     } catch (err) {
+        console.error("GET JOBS ERROR:", err.message);
         res.status(500).json({ success: false, message: err.message });
     }
 };
@@ -51,6 +52,7 @@ export const getTestimonials = async (req, res) => {
         const data = await Testimonial.find({ isActive: true }).sort({ createdAt: -1 });
         res.json({ success: true, data });
     } catch (err) {
+        console.error("GET TESTIMONIALS ERROR:", err.message);
         res.status(500).json({ success: false, message: err.message });
     }
 };

@@ -28,11 +28,21 @@ connectDb().catch(err => {
 
 // Serverless-aware DB Connection Middleware
 app.use(async (req, res, next) => {
-    if (mongoose.connection.readyState !== 1) {
-        await connectDb();
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            await connectDb();
+        }
+        next();
+    } catch (err) {
+        console.error("DATABASE CONNECTION ERROR:", err.message);
+        res.status(503).json({ 
+            success: false, 
+            message: "Database connection failed. Please try again later.",
+            error: isProd ? undefined : err.message
+        });
     }
-    next();
 });
+
 
 app.use(express.json());
 app.use(cors({ origin: true, credentials: true }));
