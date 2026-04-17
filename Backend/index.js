@@ -56,7 +56,8 @@ app.get("/", (req, res) => res.json({
 
 // Only listen locally, NOT on Vercel
 if (!isProd) {
-    app.listen(9000, () => console.log("Server running locally on port 9000"));
+    const PORT = process.env.PORT || 9000;
+    app.listen(PORT, () => console.log(`Server running locally on port ${PORT}`));
 }
 
 export default app;

@@ -6,7 +6,7 @@ export const JWT_SECRET = process.env.JWT_SECRET;
 export const JWT_EXPIRE = process.env.JWT_EXPIRE || '7d';
 
 // Database
-export const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/sikshya_sadan';
+export const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/sikshya_sadan';
 
 // Payment Gateways (Nepal)
 export const ESEWA_MERCHANT_ID = process.env.ESEWA_MERCHANT_ID || 'EPAYTEST';
