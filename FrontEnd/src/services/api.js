@@ -1,8 +1,9 @@
 import axios from 'axios';
 
 // Base URL - Use environment variables for Vercel deployment
-export const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:9000/api';
-export const UPLOAD_URL = import.meta.env.VITE_UPLOAD_URL || 'http://localhost:9000/uploads';
+export const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+export const UPLOAD_URL = import.meta.env.VITE_UPLOAD_URL || 'http://localhost:5000/uploads';
+
 
 const api = axios.create({
     baseURL: BASE_URL

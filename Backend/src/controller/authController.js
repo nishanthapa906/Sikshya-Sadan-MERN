@@ -1,7 +1,8 @@
 import User from '../models/userModel.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { JWT_SECRET } from '../utils/constants.js';
+import { JWT_SECRET, JWT_EXPIRE } from '../utils/constants.js';
+
 
 export const register = async (req, res) => {
     const { name, email, password, phone, role } = req.body;
@@ -12,8 +13,9 @@ export const register = async (req, res) => {
             return res.status(400).json({ success: false, message: 'User already exists' });
         const hashed = await bcrypt.hash(password, 10);
         const user = await User.create({ name, email, password: hashed, phone, role: role || 'student', avatar: req.file?.filename || 'default-avatar.png' });
-        const token = jwt.sign({ id: user._id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '5d' });
+        const token = jwt.sign({ id: user._id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: JWT_EXPIRE });
         res.status(201).json({ success: true, user, token });
+
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
     }
@@ -21,6 +23,8 @@ export const register = async (req, res) => {
 
 export const login = async (req, res) => {
     const { email, password } = req.body;
+    console.log("Login Attempt:", email);
+    
     if (!email || !password)
         return res.status(400).json({ success: false, message: 'Email and password required' });
     try {
@@ -30,9 +34,11 @@ export const login = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Invalid credentials' });
         user.lastActive = new Date();
         await user.save();
-        const token = jwt.sign({ id: user._id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '5d' });
+        const token = jwt.sign({ id: user._id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: JWT_EXPIRE });
         res.cookie('jwt_token', token).json({ success: true, user, token });
+
     } catch (err) {
+        console.error("LOGIN ERROR:", err.message);
         res.status(500).json({ success: false, message: err.message });
     }
 };

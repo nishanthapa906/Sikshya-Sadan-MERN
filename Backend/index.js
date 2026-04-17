@@ -16,6 +16,8 @@ import jobRouter from "./src/routes/jobRoutes.js";
 import assignmentRouter from "./src/routes/assignmentRoutes.js";
 import publicRouter from "./src/routes/publicRoutes.js";
 import bannerRouter from "./src/routes/bannerRoutes.js";
+import { FRONTEND_URL } from "./src/utils/constants.js";
+
 
 
 const app = express();
@@ -26,8 +28,9 @@ const uploadPath = isProd ? "/tmp" : "./public/Images";
 connectDb();
 
 app.use(express.json());
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors({ origin: FRONTEND_URL, credentials: true }));
 app.use(cookieParser());
+
 
 // Serve static images from correct folder depending on environment
 app.use("/uploads", express.static(uploadPath));
