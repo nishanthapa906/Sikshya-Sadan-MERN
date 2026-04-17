@@ -12,7 +12,7 @@ const JobsManagement = () => {
 
     const load = async () => {
         setLoading(true);
-        jobAPI.getAll().then(res => setJobs(res.data.data || [])).catch(() => alert('Failed to load')).finally(() => setLoading(false));
+        jobAPI.getAll().then(res => setJobs(res.data.data.jobs || [])).catch(() => alert('Failed to load')).finally(() => setLoading(false));
     };
     useEffect(() => { load(); }, []);
 
@@ -30,12 +30,12 @@ const JobsManagement = () => {
             if (editing) await jobAPI.update(editing, payload);
             else await jobAPI.create(payload);
             setShowForm(false); setEditing(null); setForm(initialForm); load();
-        } catch (err) { alert('Failed to save'); }
+        } catch (err) { alert(err.response?.data?.message || 'Failed to save job'); }
     };
 
     const del = async (id) => {
         if (!confirm('Delete job?')) return;
-        try { await jobAPI.delete(id); load(); } catch { alert('Failed to delete'); }
+        try { await jobAPI.delete(id); load(); } catch (err) { alert(err.response?.data?.message || 'Failed to delete'); }
     };
 
     if (loading) return <div className="p-12 text-center font-bold text-slate-500 min-h-[50vh] flex justify-center items-center">Loading...</div>;

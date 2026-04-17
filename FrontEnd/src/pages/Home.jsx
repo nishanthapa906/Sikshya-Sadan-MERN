@@ -73,7 +73,7 @@ function Home() {
             <div key={t._id} className="flex-1 min-w-[300px] bg-white p-8 rounded-xl border border-slate-200 shadow-sm relative flex flex-col items-center text-center">
                <span className="absolute top-4 right-4 text-4xl text-slate-200 font-serif">"</span>
                <div className="w-20 h-20 rounded-full bg-slate-100 overflow-hidden mb-4 border-4 border-white shadow-sm flex items-center justify-center text-indigo-300 font-black text-2xl">
-                  {t.image || t.student?.avatar ? <img src={`${imgUrl}/${t.image || t.student?.avatar}`} alt="" className="w-full h-full object-cover" /> : t.name?.charAt(0)}
+                  {t.avatar || t.student?.avatar ? <img src={`${imgUrl}/${t.avatar || t.student?.avatar}`} alt="" className="w-full h-full object-cover" /> : t.name?.charAt(0)}
                </div>
                <p className="italic text-slate-600 mb-6 relative z-10 leading-relaxed">"{t.comment}"</p>
                <div className="font-bold text-slate-800 mt-auto">{t.name}</div>

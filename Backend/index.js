@@ -11,7 +11,7 @@ import adminRouter from "./src/routes/adminRoutes.js";
 import enrollmentRouter from "./src/routes/enrollmentRoutes.js";
 import paymentRouter from "./src/routes/paymentRoutes.js";
 import statsRouter from "./src/routes/statsRoutes.js";
-import blogRouter from "./src/routes/blogRoutes.js"; 
+import blogRouter from "./src/routes/blogRoutes.js";
 import jobRouter from "./src/routes/jobRoutes.js";
 import assignmentRouter from "./src/routes/assignmentRoutes.js";
 import publicRouter from "./src/routes/publicRoutes.js";
@@ -23,22 +23,7 @@ const app = express();
 const isProd = process.env.NODE_ENV === "production";
 const uploadPath = isProd ? "/tmp" : "./public/Images";
 
-// Connect to DB and handle initial errors
-connectDb().catch(err => {
-    console.error("CRITICAL: Failed to connect to database during startup:", err.message);
-});
-
-// Database Connection Middleware
-app.use(async (req, res, next) => {
-    try {
-        await connectDb();
-        next();
-    } catch (err) {
-        res.status(503).json({ success: false, message: "Database Connection Error" });
-    }
-});
-
-
+connectDb();
 
 app.use(express.json());
 app.use(cors({ origin: true, credentials: true }));
@@ -62,8 +47,8 @@ app.use("/api/public", publicRouter);
 app.use("/api/banners", bannerRouter);
 
 
-app.get("/", (req, res) => res.json({ 
-    success: true, 
+app.get("/", (req, res) => res.json({
+    success: true,
     message: "Sikshya Sadan API is live!",
     env: process.env.NODE_ENV,
     dbStatus: "Connecting..."

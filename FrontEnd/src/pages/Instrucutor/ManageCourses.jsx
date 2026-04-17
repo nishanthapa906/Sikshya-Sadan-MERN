@@ -14,6 +14,8 @@ const ManageCourses = () => {
     const [form, setForm] = useState(initialCourse);
     const [files, setFiles] = useState({ thumb: null, pdf: null });
 
+    const categories = ['Programming', 'Web Development', 'Data Science', 'Graphic Design', 'Mobile Development', 'Cloud Computing', 'Cybersecurity', 'Other'];
+
     const load = async () => {
         setLoading(true);
         courseAPI.getInstructorCourses().then(res => setCourses(res.data.courses || [])).catch(() => alert('Failed to load courses')).finally(() => setLoading(false));
@@ -68,7 +70,17 @@ const ManageCourses = () => {
                 <form onSubmit={submit} className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm mb-12">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div><label className="block text-xs font-black tracking-widest uppercase text-slate-500 mb-2">Title</label><input required value={form.title} onChange={e=>setForm({...form, title:e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 font-medium"/></div>
-                        <div><label className="block text-xs font-black tracking-widest uppercase text-slate-500 mb-2">Category</label><input required value={form.category} onChange={e=>setForm({...form, category:e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 font-medium"/></div>
+                        <div>
+                            <label className="block text-xs font-black tracking-widest uppercase text-slate-500 mb-2">Category</label>
+                            <select 
+                                required 
+                                value={form.category} 
+                                onChange={e=>setForm({...form, category:e.target.value})} 
+                                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 font-medium cursor-pointer"
+                            >
+                                {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                            </select>
+                        </div>
                         <div><label className="block text-xs font-black tracking-widest uppercase text-slate-500 mb-2">Skill Level</label><select value={form.skillLevel} onChange={e=>setForm({...form, skillLevel:e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 font-medium"><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></div>
                         <div><label className="block text-xs font-black tracking-widest uppercase text-slate-500 mb-2">Duration (Hrs)</label><input required type="number" value={form.duration} onChange={e=>setForm({...form, duration:e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 font-medium"/></div>
                         <div><label className="block text-xs font-black tracking-widest uppercase text-slate-500 mb-2">Fee (Rs)</label><input required type="number" value={form.fee} onChange={e=>setForm({...form, fee:e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 font-medium"/></div>

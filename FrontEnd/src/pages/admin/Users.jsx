@@ -23,6 +23,15 @@ const Users = () => {
         } catch { alert("Failed to update"); }
     };
 
+    const changeRole = async (id, currentRole) => {
+        const newRole = currentRole === 'student' ? 'instructor' : 'student';
+        if (!confirm(`Change role from ${currentRole} to ${newRole}?`)) return;
+        try {
+            await adminAPI.updateUserRole(id, newRole);
+            setUsers(users.map(u => u._id === id ? { ...u, role: newRole } : u));
+        } catch { alert("Failed to update role"); }
+    };
+
     const del = async (id) => {
         if (!confirm("Delete user?")) return;
         try {
@@ -67,6 +76,14 @@ const Users = () => {
                                 <td className="p-4 text-sm font-bold text-indigo-600 capitalize">{u.role}</td>
                                 <td className="p-4 text-xs font-black uppercase tracking-widest"><span className={`px-2 py-1 rounded-md ${u.isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>{u.isActive ? 'Active' : 'Blocked'}</span></td>
                                 <td className="p-4 text-center space-x-2 whitespace-nowrap">
+                                    {u.role !== 'admin' && (
+                                        <button 
+                                            onClick={() => changeRole(u._id, u.role)} 
+                                            className="px-4 py-2 rounded-lg text-xs font-bold bg-indigo-100 hover:bg-indigo-200 text-indigo-700 transition-colors"
+                                        >
+                                            Make {u.role === 'student' ? 'Instructor' : 'Student'}
+                                        </button>
+                                    )}
                                     <button onClick={() => toggle(u._id, u.isActive)} className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors ${u.isActive ? 'bg-amber-100 hover:bg-amber-200 text-amber-700' : 'bg-emerald-100 hover:bg-emerald-200 text-emerald-700'}`}>{u.isActive ? 'Block' : 'Unblock'}</button>
                                     <button onClick={() => del(u._id)} className="px-4 py-2 rounded-lg text-xs font-bold bg-red-100 hover:bg-red-200 text-red-700 transition-colors">Del</button>
                                 </td>
